@@ -265,7 +265,7 @@ Special thanks to the open‑source community for the libraries and inspiration 
 
 **JOIN CYBERSECURITY GROUP TELEGRAM**
 ```bash
-https://t.me/+9SQYgP8E-OxlYzg1
+https://t.me/roompubiccybersecurity
 ```
 
 **ALL COPYRIGHT RESERVED**  
