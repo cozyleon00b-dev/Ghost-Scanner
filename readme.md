@@ -1,5 +1,6 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![GitHub release](https://img.shields.io/github/v/release/cozyleon00b-dev/Ghost-Scanner)](https://github.com/cozyleon00b-dev/Ghost-Scanner/releases)
 
 # GHOST SCANNER – ULTIMATE EDITION
 
@@ -7,7 +8,19 @@
 Version 2.0 – FAST DEMON  
 Release Date: 2026‑09‑03
 
-## OVERVIEW
+## Table of Contents
+- [Overview](#overview)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Proxy Configuration](#proxy-configuration)
+- [Output and Reports](#output-and-reports)
+- [Tutorial](#tutorial)
+- [Troubleshooting](#troubleshooting)
+- [Disclaimer](#disclaimer)
+- [Version History](#version-history)
+- [Contact & Acknowledgements](#contact--acknowledgements)
+
+## Overview
 
 Ghost Scanner is a modular, high‑performance security tool designed for ethical hacking, vulnerability assessment, and stress testing. It combines:
 
@@ -23,7 +36,7 @@ Ghost Scanner is a modular, high‑performance security tool designed for ethica
 
 Ghost Scanner is built for speed, accuracy, and reliability. It is intended for **authorised testing only**.
 
-## INSTALLATION
+## Installation
 
 ### Prerequisites
 - Python 3.8 or higher
@@ -32,20 +45,20 @@ Ghost Scanner is built for speed, accuracy, and reliability. It is intended for 
 
 ### Platform‑Specific Setup
 
-#### Termux (Android)
+**Termux (Android)**
 ```bash
 pkg update && pkg upgrade
 pkg install python python-pip git
 pip install --upgrade pip
 ```
 
-#### Kali Linux
+**Kali Linux**
 ```bash
 sudo apt update
 sudo apt install python3 python3-pip git
 ```
 
-#### Arch Linux
+**Arch Linux**
 ```bash
 sudo pacman -Syu
 sudo pacman -S python python-pip git
@@ -55,8 +68,8 @@ sudo pacman -S python python-pip git
 
 1. **Clone or download** the repository:
    ```bash
-   git clone https://github.com/your-repo/ghost-scanner.git
-   cd ghost-scanner
+   git clone https://github.com/cozyleon00b-dev/Ghost-Scanner.git
+   cd Ghost-Scanner
    ```
    *(If you only have the single `ghostscanner.py` file, place it in a dedicated folder.)*
 
@@ -81,7 +94,7 @@ sudo pacman -S python python-pip git
    chmod +x ghostscanner.py
    ```
 
-## USAGE
+## Usage
 
 Ghost Scanner runs in two primary modes: **Scan** and **Attack**.
 
@@ -146,7 +159,7 @@ python ghostscanner.py -u https://target.com --ddos --threads 300 --duration 30 
 python ghostscanner.py -u https://target.com --syn --threads 200 --duration 20
 ```
 
-## PROXY CONFIGURATION
+## Proxy Configuration
 
 Ghost Scanner supports HTTP, HTTPS, and SOCKS5 proxies. They are used for both scanning and attacks to hide your IP and distribute requests.
 
@@ -163,8 +176,7 @@ http://203.0.113.50:3128
 ### Built‑in Proxy List
 If no proxy file is provided and `--no-proxy` is not set, a default set of free public proxies is loaded automatically.
 
-
-## OUTPUT AND REPORTS
+## Output and Reports
 
 After a scan, two files are generated:
 
@@ -180,8 +192,7 @@ The JSON structure includes:
 - `summary` – total findings and risk distribution
 - `anti_block_stats` – request/retry/proxy usage metrics
 
-
-## TUTORIAL – STEP BY STEP
+## Tutorial
 
 ### Scenario 1: Scanning a Government Website
 ```bash
@@ -208,7 +219,7 @@ python ghostscanner.py -u https://your-server.com --ddos --threads 250 --duratio
 - Simulates a distributed attack
 - Useful for capacity testing and firewall rule validation
 
-## TROUBLESHOOTING
+## Troubleshooting
 
 ### Common Issues & Solutions
 
@@ -227,7 +238,7 @@ python ghostscanner.py -u https://your-server.com --ddos --threads 250 --duratio
 - Increase `--threads` for port scanning (default 300).
 - Use a reliable proxy list to avoid rate‑limiting.
 
-## DISCLAIMER
+## Disclaimer
 
 Ghost Scanner is a powerful tool designed for **ethical security research, penetration testing, and educational purposes**.
 
@@ -236,7 +247,7 @@ Ghost Scanner is a powerful tool designed for **ethical security research, penet
 - The author (ARGA NOT DEV) is **not responsible** for any misuse, damage, or legal consequences arising from the use of this software.
 - By using this tool, you agree to accept full responsibility for your actions and to use it only in compliance with all applicable laws.
 
-## VERSION HISTORY
+## Version History
 
 - **2.0 (FAST DEMON)** – 2026‑09‑03
   - Optimised payload count for speed (30 per category)
@@ -248,11 +259,9 @@ Ghost Scanner is a powerful tool designed for **ethical security research, penet
 - **1.0 (DEMON)** – 2026‑08‑31
   - Initial release with 150k+ payloads, WAF bypass, double validation, attack engine, HTML/JSON reporting
 
-## CONTACT
+## Contact & Acknowledgements
 
 For support, suggestions, or collaboration, please contact the developer via the official channel (if any). This project is maintained by **ARGA NOT DEV**.
-
-## ACKNOWLEDGEMENTS
 
 Special thanks to the open‑source community for the libraries and inspiration that made this tool possible.
 
@@ -263,10 +272,8 @@ Special thanks to the open‑source community for the libraries and inspiration 
 4. Bestfriends
 5. Friends
 
-**JOIN CYBERSECURITY GROUP TELEGRAM**
-```bash
-https://t.me/roompubiccybersecurity
-```
+**JOIN CYBERSECURITY GROUP TELEGRAM**  
+[https://t.me/roompubiccybersecurity](https://t.me/roompubiccybersecurity)
 
 **ALL COPYRIGHT RESERVED**  
 © 2026 GhostTeam – Ghost Scanner
