@@ -263,5 +263,10 @@ Special thanks to the open‑source community for the libraries and inspiration 
 4. Bestfriends
 5. Friends
 
+**JOIN CYBERSECURITY GROUP TELEGRAM**
+```bash
+https://t.me/+9SQYgP8E-OxlYzg1
+```
+
 **ALL COPYRIGHT RESERVED**  
 © 2026 GhostTeam – Ghost Scanner
