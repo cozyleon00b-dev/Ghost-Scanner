@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+*.log
+*.json
+results/
+sensitive_data/
+proxies.txt
+secret.key
+master.key
+.DS_Store
