@@ -52,7 +52,7 @@ sudo pacman -S python python-pip git
 
 1. **Clone or download** the repository:
    ```bash
-   git clone https://github.com/your-repo/ghost-scanner.git
+   git clone https://github.com/cozyleon00b-dev/ghost-scanner.git
    cd ghost-scanner
    ```
    *(If you only have the single `ghostscanner.py` file, place it in a dedicated folder.)*
