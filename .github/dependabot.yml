@@ -1,0 +1,45 @@
+# Dependabot configuration for Ghost Scanner
+# Docs: https://docs.github.com/en/code-security/dependabot/dependabot-version-updates
+
+version: 2
+updates:
+  # Python dependencies (pip)
+  - package-ecosystem: "pip"
+    directory: "/"  # Location of requirements.txt
+    schedule:
+      interval: "weekly"
+      day: "sunday"
+      time: "12:00"
+      timezone: "Asia/Jakarta"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "python"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    allow:
+      - dependency-type: "production"
+      - dependency-type: "development"
+    ignore:
+      # Jangan upgrade major version untuk beberapa lib kritis (optional)
+      - dependency-name: "cloudscraper"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "fake-useragent"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "requests"
+        update-types: ["version-update:semver-major"]
+    # Assign pull requests to specific reviewers (optional)
+    # reviewers:
+    #   - "cozyleon00b-dev"
+    # assignees:
+    #   - "cozyleon00b-dev"
+
+  # GitHub Actions (if you have workflows in .github/workflows)
+  # - package-ecosystem: "github-actions"
+  #   directory: "/"
+  #   schedule:
+  #     interval: "weekly"
+  #   labels:
+  #     - "github-actions"
+  #     - "dependencies"
