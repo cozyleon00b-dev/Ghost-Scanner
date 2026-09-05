@@ -240,7 +240,7 @@ Ghost Scanner is a powerful tool designed for ethical security research, penetra
 
 - You must have explicit authorisation to test any system that you do not own.
 - Unauthorised use of this tool is illegal and may result in severe criminal penalties.
-- The author (ARGA NOT DEV) is not responsible for any misuse, damage, or legal consequences arising from the use of this software.
+- The author (GhostTeam) is not responsible for any misuse, damage, or legal consequences arising from the use of this software.
 - By using this tool, you agree to accept full responsibility for your actions and to use it only in compliance with all applicable laws.
 
 ## VERSION HISTORY
