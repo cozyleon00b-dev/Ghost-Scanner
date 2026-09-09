@@ -1,6 +1,25 @@
+# ============================================================
+# GHOST SCANNER v4.2 – SENSITIVE HUNTER
+# Core Dependencies
+# ============================================================
+
+# HTTP & Bypass
 cloudscraper>=1.2.71
 fake-useragent>=1.5.1
 requests>=2.31.0
+
+# CLI & UI
 rich>=13.7.1
+
+# Encryption (for sensitive data handling)
 cryptography>=42.0.0
+
+# PDF Report Generator
 fpdf>=1.7.2
+
+# ============================================================
+# Optional Dependencies
+# ============================================================
+# For headless XSS verification (--headless flag)
+# pyppeteer>=2.0.0
+# Note: pyppeteer requires additional setup; install only if needed.

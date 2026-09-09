@@ -1,23 +1,25 @@
-# GHOST SCANNER – ULTRA SAVAGE+
+# GHOST SCANNER – SENSITIVE HUNTER
 
 **All‑in‑One Security Assessment & Penetration Testing Framework**  
-Version 3.6 – ULTRA SAVAGE+  
-Release Date: 2026‑09‑08
+Version 4.2 – SENSITIVE HUNTER  
+Release Date: 2026‑09‑10
 
 ## OVERVIEW
 
 Ghost Scanner is a modular, high‑performance security tool designed for ethical hacking, vulnerability assessment, and stress testing. It combines:
 
-- **Advanced Web Vulnerability Scanning** – SQLi, XSS, LFI, RFI, Command Injection, SSTI, NoSQL, LDAP, XXE, SSRF, Path Traversal, Deserialization, RCE, Business Logic Errors, Mass Assignment, Rate Limit
-- **Deface Detection** – automatically checks for indicators of website defacement (e.g., “hacked”, “defaced”, “owned by”) with proof‑of‑concept
-- **Massive Payload Generation** – 1,000,000+ dynamic payloads for SQLi and XSS (sourced from W3Schools & OWASP) with intelligent sampling for speed
+- **Advanced Web Vulnerability Scanning** – SQLi, XSS (with Dalfox context‑aware engine), LFI, RFI, Command Injection, SSTI, NoSQL, LDAP, XXE, SSRF, Path Traversal, Deserialization, RCE, Business Logic Errors, Mass Assignment, Rate Limit
+- **Deface Detection** – full PoC with indicator matching, title extraction, and curl command generation
+- **WordPress Activity Log RCE (CVE‑2026‑54806)** – detection and blind command execution
+- **Massive Payload Generation** – 1,000,000+ dynamic payloads for SQLi and XSS (sourced from W3Schools & OWASP) with intelligent sampling
 - **SQL Data Extraction** – automatically extract database name, tables, columns, and sample data when SQL injection is found
 - **Proof‑of‑Concept (PoC) Generation** – every finding includes a cURL command and direct URL for replication
-- **AI‑Powered Analysis** – optional integration with CodeCraft Claude Opus 5 for intelligent vulnerability analysis and recommendations
+- **Sensitive Data Extraction (Indonesia)** – NIK, NPWP, NIP, bank account numbers, bank names, WhatsApp numbers, KTP links, surat izin links, PDF links, and area codes (province, kabupaten, kecamatan)
+- **Domain Classification** – automatically categorises target domain: Government, Education, Police, Military, Medical, Business/Commercial, or Other
+- **AI‑Powered Analysis** – optional integration with CodeCraft Claude Opus 5 for intelligent vulnerability analysis, PoC evaluation, recommendations, and constructive feedback
 - **PDF Report Generation** – professional, printable reports with all findings, PoCs, sensitive data, and AI analysis
-- **Sensitive Data Extraction** – emails, phone numbers, NIK, NPWP, KTP, API keys, JWT tokens, AWS/Azure/GCP keys, source code snippets, and employee/staff data
 - **Port Scanning** – fast TCP port discovery on common service ports
-- **Proxy Rotation** – use SOCKS/HTTP proxies from file or built‑in list, with optional validation
+- **Proxy Rotation** – use SOCKS/HTTP proxies from file or built‑in list, with optional validation and ProxyScrape API integration
 - **Cloudflare & Bot Bypass** – cloudscraper + user‑agent rotation + multi‑attempt fallback
 - **Double Validation** – reduce false positives by re‑testing findings with alternative payloads
 - **DOS/DDOS Engine** – HTTP flood, SYN flood, SSL renegotiation, UDP flood (multi‑threaded)
@@ -81,14 +83,19 @@ sudo pacman -S python python-pip git
    fpdf>=1.7.2
    ```
 
-3. **(Optional) Prepare a proxy list** – one proxy per line in a text file, e.g. `proxies.txt`:
+3. **(Optional) Install pyppeteer for headless XSS verification** (`--headless` flag):
+   ```bash
+   pip install pyppeteer
+   ```
+
+4. **(Optional) Prepare a proxy list** – one proxy per line in a text file, e.g. `proxies.txt`:
    ```
    http://user:pass@proxy1:8080
    socks5://proxy2:1080
    http://proxy3:3128
    ```
 
-4. **Make the script executable** (Linux/macOS/Termux):
+5. **Make the script executable** (Linux/macOS/Termux):
    ```bash
    chmod +x ghostscanner.py
    ```
@@ -116,7 +123,7 @@ python ghostscanner.py -u <TARGET_URL> [OPTIONS]
 | `--quick` | Quick scan (fewer payloads, faster) |
 | `--pdf` | Generate PDF report (default: report.pdf) |
 | `--ai` | Enable AI analysis using CodeCraft Claude Opus 5 |
-| `-h, --help` | Show the help menu |
+| `--headless` | Enable headless verification for XSS (requires pyppeteer) |
 
 ### Scan Mode (Default)
 When no attack flag is given, the script performs a full vulnerability scan.
@@ -126,16 +133,19 @@ When no attack flag is given, the script performs a full vulnerability scan.
 python ghostscanner.py -u https://target.com -v --proxy-list proxies.txt --validate-proxy --pdf --ai
 ```
 
-**What it does:**
+**What it does (all checks are performed automatically):**
 - Accesses the target with cloudscraper + proxy rotation
 - Extracts parameters, forms, and API endpoints
-- Runs SQLi and XSS scans with 1,000,000+ dynamically generated payloads
-- Performs Deface Detection on the homepage
+- Performs domain classification (Government, Education, Police, Military, Medical, Business, Other)
+- Extracts sensitive data: NIK, NPWP, NIP, bank account numbers, bank names, WhatsApp numbers, KTP links, surat izin links, PDF links, area codes
+- Scans for SQLi and XSS with 1,000,000+ dynamically generated payloads
+- Runs Dalfox context‑aware XSS engine (HTML, Attribute, JavaScript, URL, DOM, CSP bypass, mXSS, Blind XSS)
 - Checks Business Logic Errors, Mass Assignment, and Rate Limit
-- Extracts sensitive data (emails, NIK, KTP, API keys, employee data, etc.)
+- Detects Deface with full PoC
+- Checks for WP Activity Log RCE (CVE‑2026‑54806)
 - Performs port scanning on common ports
 - Generates PoC for every finding (cURL + URL)
-- Optionally runs AI analysis (Claude Opus 5) and generates a PDF report
+- Optionally runs AI analysis and generates a PDF report
 - Saves results as JSON and auto‑generates an HTML report
 
 ### Attack Mode
@@ -165,7 +175,18 @@ python ghostscanner.py -u https://target.com --ddos --threads 300 --duration 30 
 python ghostscanner.py -u https://target.com --syn --threads 200 --duration 20
 ```
 
----
+### WordPress Activity Log Exploit (CVE‑2026‑54806)
+
+| Option | Description |
+|--------|-------------|
+| `--wp-check` | Check if target is vulnerable to CVE‑2026‑54806 |
+| `--wp-command CMD` | Execute a system command via blind RCE |
+
+**Examples:**
+```bash
+python ghostscanner.py -u https://target.com --wp-check
+python ghostscanner.py -u https://target.com --wp-command "id"
+```
 
 ## PROXY CONFIGURATION
 
@@ -182,9 +203,7 @@ http://203.0.113.50:3128
 - Use `--validate-proxy` to remove dead proxies before use (increases startup time).
 
 ### Built‑in Proxy List
-If no proxy file is provided and `--no-proxy` is not set, a default set of free public proxies is loaded automatically.
-
----
+If no proxy file is provided and `--no-proxy` is not set, a default set of free public proxies is loaded automatically from ProxyScrape API.
 
 ## OUTPUT AND REPORTS
 
@@ -197,38 +216,33 @@ After a scan, the following files are generated:
 3. **PDF report** (`report_<timestamp>.pdf`) – if `--pdf` is enabled, a professional printable report with all findings, PoCs, and AI analysis (if `--ai` is set).
 
 The JSON structure includes:
-- `target`, `domain`, `timestamp`
+- `target`, `domain`, `domain_category` (Government, Education, Police, Military, Medical, Business, Other)
 - `vulnerabilities` – grouped by type, with parameters, payloads, confidence scores, evidence, and PoC (cURL + URL)
+- `sensitive_data` – NIK, NPWP, NIP, bank accounts, bank names, WhatsApp numbers, KTP links, surat izin links, PDF links, area codes (province, kabupaten, kecamatan), emails, phones, API keys, JWT tokens, source code snippets
 - `sql_extracted` – database name, tables, columns, sample data
-- `sensitive_data` – emails, phones, NIK, KTP, API keys, JWT tokens, AWS/Azure/GCP keys, source code snippets
 - `ports` – open ports discovered
 - `summary` – total findings and risk distribution
 - `ai_analysis` – AI-generated summary and recommendations (if enabled)
 
----
-
 ## TUTORIAL – STEP BY STEP
 
-### Scenario 1: Scanning a Government Website with AI + PDF
+### Scenario 1: Full Scan with AI + PDF
 ```bash
-python ghostscanner.py -u https://www.madiunkota.go.id -v --proxy-list myproxies.txt --ai --pdf
+python ghostscanner.py -u https://target.com -v --ai --pdf
 ```
-- Bypasses Cloudflare if present
-- Extracts parameters and forms
-- Runs SQLi and XSS scans with 1M+ payloads
-- Performs Deface Detection
-- Scans open ports and shows them
-- Extracts emails, NIK, KTP, API keys, employee data
-- Generates PoC for each finding
-- Performs AI analysis (Claude Opus 5) and creates a PDF report
+- Automatically classifies domain type
+- Extracts all sensitive Indonesian data (NIK, NPWP, NIP, bank, etc.)
+- Runs SQLi, XSS (Dalfox), Business Logic, Mass Assignment, Rate Limit, Deface, WP Log checks
+- Generates JSON, HTML, and PDF reports
+- AI analysis with actionable recommendations
 
-### Scenario 2: Testing a Vulnerable Lab
+### Scenario 2: Quick Scan (Fast)
 ```bash
-python ghostscanner.py -u http://vulnerable-lab.local --no-proxy --verbose --quick
+python ghostscanner.py -u https://target.com --quick
 ```
-- Disables proxies for internal testing
-- Verbose mode shows each request in real time
-- Quick mode reduces payloads for speed
+- Uses fewer payloads per category
+- Skips AI and PDF generation
+- Ideal for initial reconnaissance
 
 ### Scenario 3: Conducting a DDOS Test on Your Own Server
 ```bash
@@ -236,8 +250,6 @@ python ghostscanner.py -u https://your-server.com --ddos --threads 250 --duratio
 ```
 - Simulates a distributed attack with multiple methods
 - Useful for capacity testing and firewall rule validation
-
----
 
 ## TROUBLESHOOTING
 
@@ -258,8 +270,6 @@ python ghostscanner.py -u https://your-server.com --ddos --threads 250 --duratio
 - Increase `--threads` for port scanning (default 300).
 - Use a reliable proxy list to avoid rate‑limiting.
 
----
-
 ## DISCLAIMER
 
 Ghost Scanner is a powerful tool designed for **ethical security research, penetration testing, and educational purposes**.
@@ -269,16 +279,21 @@ Ghost Scanner is a powerful tool designed for **ethical security research, penet
 - The author (ARGA NOT DEV) is **not responsible** for any misuse, damage, or legal consequences arising from the use of this software.
 - By using this tool, you agree to accept full responsibility for your actions and to use it only in compliance with all applicable laws.
 
----
-
 ## VERSION HISTORY
 
-- **3.6 (ULTRA SAVAGE+)** – 2026‑09‑08
-  - Added **Deface Detection** – automatically checks for deface indicators (hacked, defaced, etc.) with PoC
-  - AI model upgraded to **Claude Opus 5** via CodeCraft API
-  - Optimised request handling for speed and reliability
-  - Cross‑platform support for Arch, BlackArch, Termux, CMD, PowerShell
-  - All previous features from v3.5 retained
+- **4.2 (SENSITIVE HUNTER)** – 2026‑09‑10
+  - Added domain classification (Government, Education, Police, Military, Medical, Business, Other)
+  - Added sensitive Indonesian data extraction: NIK, NPWP, NIP, bank account numbers, bank names, WhatsApp numbers, KTP links, surat izin links, PDF links, area codes
+  - Integrated ProxyScrape API for dynamic proxy fetching
+  - Enhanced sensitive data extraction with deduplication and context detection
+  - Updated PDF report to include domain category and all sensitive data
+  - All previous features from v4.1 retained and improved
+
+- **4.1 (OMNI XSS + WP LOG EXPLOIT)** – 2026‑09‑09
+  - Added Dalfox XSS engine (context‑aware, DOM, CSP bypass, mXSS, Blind XSS)
+  - Integrated CVE‑2026‑54806 detection and blind RCE exploitation
+  - Added full Deface PoC with curl, indicators, and screenshot simulation
+  - Enhanced AI analysis for PoC evaluation and recommendations
 
 - **3.5 (ULTRA SAVAGE)** – 2026‑09‑08
   - Added 1,000,000+ SQLi and XSS payloads
@@ -299,13 +314,9 @@ Ghost Scanner is a powerful tool designed for **ethical security research, penet
 - **1.0 (DEMON)** – 2026‑08‑31
   - Initial release with 150k+ payloads, WAF bypass, double validation, attack engine, HTML/JSON reporting
 
----
-
 ## CONTACT
 
 For support, suggestions, or collaboration, please contact the developer via the official channel (if any). This project is maintained by **ARGA NOT DEV**.
-
----
 
 ## ACKNOWLEDGEMENTS
 
@@ -318,8 +329,8 @@ Special thanks to the open‑source community for the libraries and inspiration 
 4. Bestfriends
 5. Friends
 
-**JOIN CYBERSECURITY GROUP TELEGRAM**  
+**JOIN CYBERSECURITY TELEGRAM**  
 [https://t.me/roompubiccybersecurity](https://t.me/roompubiccybersecurity)
-
+[https://t.me/+NP7XHa6AIZRmNGU1](https://t.me/+NP7XHa6AIZRmNGU1)
 **ALL COPYRIGHT RESERVED**  
 © 2026 GhostTeam – Ghost Scanner
