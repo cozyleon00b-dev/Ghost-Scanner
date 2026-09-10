@@ -1,4 +1,3 @@
-```markdown
 # GHOST SCANNER – OMNI TOOLS+
 
 **All‑in‑One Security Assessment & Penetration Testing Framework**  
