@@ -1,326 +1,773 @@
-# GHOST SCANNER – SENSITIVE HUNTER
+```markdown
+# GHOST SCANNER – OMNI TOOLS+
 
 **All‑in‑One Security Assessment & Penetration Testing Framework**  
-Version 4.2 – SENSITIVE HUNTER  
+Version 4.5 – OMNI TOOLS+  
 Release Date: 2026‑09‑10
 
 ## OVERVIEW
 
-Ghost Scanner is a modular, high‑performance security tool designed for ethical hacking, vulnerability assessment, and stress testing. It combines:
+Ghost Scanner is a modular, high‑performance security assessment framework designed for ethical hacking, vulnerability assessment, and stress testing. It combines internal engines with 15 industry‑standard external tools, generating comprehensive reports (JSON, HTML, PDF) with AI‑powered analysis and separate PDF outputs for each sensitive data category.
 
-- **Advanced Web Vulnerability Scanning** – SQLi, XSS (with Dalfox context‑aware engine), LFI, RFI, Command Injection, SSTI, NoSQL, LDAP, XXE, SSRF, Path Traversal, Deserialization, RCE, Business Logic Errors, Mass Assignment, Rate Limit
-- **Deface Detection** – full PoC with indicator matching, title extraction, and curl command generation
-- **WordPress Activity Log RCE (CVE‑2026‑54806)** – detection and blind command execution
-- **Massive Payload Generation** – 1,000,000+ dynamic payloads for SQLi and XSS (sourced from W3Schools & OWASP) with intelligent sampling
-- **SQL Data Extraction** – automatically extract database name, tables, columns, and sample data when SQL injection is found
-- **Proof‑of‑Concept (PoC) Generation** – every finding includes a cURL command and direct URL for replication
-- **Sensitive Data Extraction (Indonesia)** – NIK, NPWP, NIP, bank account numbers, bank names, WhatsApp numbers, KTP links, surat izin links, PDF links, and area codes (province, kabupaten, kecamatan)
-- **Domain Classification** – automatically categorises target domain: Government, Education, Police, Military, Medical, Business/Commercial, or Other
-- **AI‑Powered Analysis** – optional integration with CodeCraft Claude Opus 5 for intelligent vulnerability analysis, PoC evaluation, recommendations, and constructive feedback
-- **PDF Report Generation** – professional, printable reports with all findings, PoCs, sensitive data, and AI analysis
-- **Port Scanning** – fast TCP port discovery on common service ports
-- **Proxy Rotation** – use SOCKS/HTTP proxies from file or built‑in list, with optional validation and ProxyScrape API integration
-- **Cloudflare & Bot Bypass** – cloudscraper + user‑agent rotation + multi‑attempt fallback
-- **Double Validation** – reduce false positives by re‑testing findings with alternative payloads
+### Key Capabilities
+
+- **Advanced Web Vulnerability Scanning** – SQLi, XSS (Dalfox context‑aware), LFI, RFI, Command Injection, SSTI, NoSQL, LDAP, XXE, SSRF, Path Traversal, Deserialization, RCE, Business Logic Errors, Mass Assignment, Rate Limit
+- **15 External Tools Integration** – Nuclei, Subfinder, httpx, Naabu, Katana, ffuf, sqlmap, Dalfox, Amass, dnsx, gau, waybackurls, Arjun, SecretFinder, Interactsh
+- **Deface Detection** – full PoC with 22+ indicators, title extraction, curl command, screenshot simulation
+- **WordPress Activity Log RCE (CVE‑2026‑54806)** – detection & blind command execution (auto‑skip if not WordPress)
+- **Admin Deep Extraction** – after successful admin login bypass, crawls 22+ admin pages, extracts tables, downloads exports (.sql, .csv, .zip, .json), detects database config leaks
+- **E‑commerce Detection** – identifies domain/hosting/VPS provider, extracts products, prices, buyers, employees
+- **Sensitive Data Extraction (Indonesia)** – NIK (with province/kabupaten/kecamatan parsing), NPWP, NIP, bank accounts, bank names, WhatsApp, PIN, KTP links, KK links, Surat Izin links, PDF links, API keys, JWT, cloud keys, source code
+- **Separate PDF per Sensitive Category** – each data type (NIK, KTP, KK, HP, Email, Bank, Rekening, PIN, API, Source Code, Admin Users/Buyers/Employees/Orders/Products) gets its own PDF
+- **AI Analysis (Claude Opus 5 via CodeCraft)** – 8‑section report: executive summary, critical findings, high findings, sensitive data analysis (UU PDP/GDPR), prioritized remediation, further testing suggestions, constructive critique, best practices
+- **PoC Verification 5x** – each finding is re‑verified 5 times (min. 4/5 must match) to eliminate false positives
+- **IP Safety / Anti‑Ban** – adaptive delay with jitter, proxy rotation (ProxyScrape API), user‑agent rotation, cloudscraper + fallback, exponential backoff
+- **Domain Classification** – Government, Education, Police, Military, Medical, Business, Other
 - **DOS/DDOS Engine** – HTTP flood, SYN flood, SSL renegotiation, UDP flood (multi‑threaded)
-- **HTML, JSON & PDF Reporting** – structured output for professional audit trails
+- **Cross‑Platform** – Windows, Linux (Kali/Ubuntu/Arch/BlackArch), Termux (Android), macOS
 
-Ghost Scanner is built for speed, accuracy, and reliability. It is intended for **authorised testing only**.
+Ghost Scanner is intended for **authorized testing only**.
 
-## INSTALLATION
+---
 
-### Prerequisites
-- Python 3.8 or higher
-- pip (package installer)
-- Git (optional, for cloning)
+## TABLE OF CONTENTS
 
-### Platform‑Specific Setup
+1. [Kali Linux / Debian / Ubuntu Installation](#1-kali-linux--debian--ubuntu-installation)
+2. [Arch Linux / BlackArch Installation](#2-arch-linux--blackarch-installation)
+3. [Termux (Android) Installation](#3-termux-android-installation)
+4. [Windows Installation](#4-windows-installation)
+5. [macOS Installation](#5-macos-installation)
+6. [Usage Examples](#usage-examples)
+7. [External Tools](#external-tools-integrated)
+8. [Output & Reports](#output--reports)
+9. [Troubleshooting](#troubleshooting)
+10. [Disclaimer](#disclaimer)
 
-**Termux (Android)**
+---
+
+## 1. KALI LINUX / DEBIAN / UBUNTU INSTALLATION
+
+### Step 1 – Update System & Install Prerequisites
+
 ```bash
-pkg update && pkg upgrade
-pkg install python python-pip git
+sudo apt update && sudo apt upgrade -y
+sudo apt install python3 python3-pip git golang-go -y
+```
+
+### Step 2 – Clone Repository
+
+```bash
+git clone https://github.com/cozyleon00b-dev/ghost-scanner.git
+cd ghost-scanner
+```
+
+### Step 3 – Install Python Dependencies
+
+```bash
+pip install -r requirements.txt
+pip install sqlmap arjun
+```
+
+### Step 4 – Install Go Tools
+
+```bash
+go install -v github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest
+go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
+go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest
+go install -v github.com/projectdiscovery/naabu/v2/cmd/naabu@latest
+go install github.com/projectdiscovery/katana/cmd/katana@latest
+go install github.com/ffuf/ffuf/v2@latest
+go install github.com/hahwul/dalfox/v2@latest
+go install -v github.com/owasp-amass/amass/v5/cmd/amass@main
+go install -v github.com/projectdiscovery/dnsx/cmd/dnsx@latest
+go install github.com/lc/gau/v2/cmd/gau@latest
+go install github.com/tomnomnom/waybackurls@latest
+go install -v github.com/projectdiscovery/interactsh/cmd/interactsh-client@latest
+```
+
+### Step 5 – Add GOPATH to PATH
+
+```bash
+# Sesi ini saja
+export PATH=$PATH:$(go env GOPATH)/bin
+
+# Permanen (tambahkan ke ~/.bashrc atau ~/.zshrc)
+echo 'export PATH=$PATH:$(go env GOPATH)/bin' >> ~/.bashrc
+source ~/.bashrc
+```
+
+### Step 6 – Install SecretFinder
+
+```bash
+git clone https://github.com/m4ll0k/SecretFinder.git ~/SecretFinder
+pip install -r ~/SecretFinder/requirements.txt
+```
+
+### Step 7 – Verify Installation
+
+```bash
+nuclei -version
+subfinder -version
+httpx -version
+dalfox version
+sqlmap --version
+python3 ghostscanner.py --help
+```
+
+### Step 8 – Run Ghost Scanner
+
+```bash
+python3 ghostscanner.py -u https://target.com -v --ai --pdf --tools --force-admin
+```
+
+---
+
+## 2. ARCH LINUX / BLACKARCH INSTALLATION
+
+### Step 1 – Update System & Install Prerequisites
+
+```bash
+sudo pacman -Syu
+sudo pacman -S python python-pip git go base-devel
+```
+
+### Step 2 – Clone Repository
+
+```bash
+git clone https://github.com/cozyleon00b-dev/ghost-scanner.git
+cd ghost-scanner
+```
+
+### Step 3 – Install Python Dependencies
+
+```bash
+pip install -r requirements.txt
+pip install sqlmap arjun
+```
+
+**Jika ada error "externally-managed-environment"** (Arch Linux terbaru):
+```bash
+pip install --break-system-packages -r requirements.txt
+pip install --break-system-packages sqlmap arjun
+```
+
+Atau pakai virtualenv:
+```bash
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+pip install sqlmap arjun
+```
+
+### Step 4 – Install Go Tools
+
+```bash
+go install -v github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest
+go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
+go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest
+go install -v github.com/projectdiscovery/naabu/v2/cmd/naabu@latest
+go install github.com/projectdiscovery/katana/cmd/katana@latest
+go install github.com/ffuf/ffuf/v2@latest
+go install github.com/hahwul/dalfox/v2@latest
+go install -v github.com/owasp-amass/amass/v5/cmd/amass@main
+go install -v github.com/projectdiscovery/dnsx/cmd/dnsx@latest
+go install github.com/lc/gau/v2/cmd/gau@latest
+go install github.com/tomnomnom/waybackurls@latest
+go install -v github.com/projectdiscovery/interactsh/cmd/interactsh-client@latest
+```
+
+### Step 5 – Add GOPATH to PATH
+
+```bash
+export PATH=$PATH:$(go env GOPATH)/bin
+
+# Permanen (tambahkan ke ~/.bashrc atau ~/.zshrc)
+echo 'export PATH=$PATH:$(go env GOPATH)/bin' >> ~/.bashrc
+source ~/.bashrc
+```
+
+### Step 6 – Install SecretFinder
+
+```bash
+git clone https://github.com/m4ll0k/SecretFinder.git ~/SecretFinder
+pip install -r ~/SecretFinder/requirements.txt
+```
+
+### Step 7 – Run Ghost Scanner
+
+```bash
+python3 ghostscanner.py -u https://target.com -v --ai --pdf --tools --force-admin
+```
+
+---
+
+## 3. TERMUX (ANDROID) INSTALLATION
+
+### Step 1 – Update & Install Prerequisites
+
+```bash
+pkg update && pkg upgrade -y
+pkg install python python-pip git golang -y
 pip install --upgrade pip
 ```
 
-**Kali Linux / Debian**
+### Step 2 – Setup Storage (Opsional)
+
 ```bash
-sudo apt update
-sudo apt install python3 python3-pip git
+termux-setup-storage
 ```
 
-**Arch Linux / BlackArch**
+### Step 3 – Clone Repository
+
 ```bash
-sudo pacman -Syu
-sudo pacman -S python python-pip git
+git clone https://github.com/cozyleon00b-dev/ghost-scanner.git
+cd ghost-scanner
 ```
 
-**Windows (CMD / PowerShell)**
-- Download and install Python from [python.org](https://www.python.org/).
-- Ensure **"Add Python to PATH"** is checked during installation.
-- Use `python` command in terminal (not `python3`).
+### Step 4 – Install Python Dependencies
 
-### Install Ghost Scanner
-
-1. **Clone or download** the repository:
-   ```bash
-   git clone https://github.com/cozyleon00b-dev/ghost-scanner.git
-   cd ghost-scanner
-   ```
-   *(If you only have the single `ghostscanner.py` file, place it in a dedicated folder.)*
-
-2. **Install Python dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   ```
-   The updated `requirements.txt` includes:
-   ```txt
-   cloudscraper>=1.2.71
-   fake-useragent>=1.5.1
-   requests>=2.31.0
-   rich>=13.7.1
-   cryptography>=42.0.0
-   fpdf>=1.7.2
-   ```
-
-3. **(Optional) Install pyppeteer for headless XSS verification** (`--headless` flag):
-   ```bash
-   pip install pyppeteer
-   ```
-
-4. **(Optional) Prepare a proxy list** – one proxy per line in a text file, e.g. `proxies.txt`:
-   ```
-   http://user:pass@proxy1:8080
-   socks5://proxy2:1080
-   http://proxy3:3128
-   ```
-
-5. **Make the script executable** (Linux/macOS/Termux):
-   ```bash
-   chmod +x ghostscanner.py
-   ```
-
-## USAGE
-
-Ghost Scanner runs in two primary modes: **Scan** and **Attack**.
-
-### Command Syntax
 ```bash
-python ghostscanner.py -u <TARGET_URL> [OPTIONS]
-```
-*On Windows, use `python`; on Linux/macOS/Termux, use `python3`.*
-
-### Global Options
-
-| Option | Description |
-|--------|-------------|
-| `-u, --url` | Target URL (must include protocol, e.g. `https://example.com`) |
-| `-o, --output` | Output JSON file name (default: `results.json`) |
-| `-v, --verbose` | Enable verbose logging to console |
-| `--proxy-list FILE` | Load proxies from a file (one per line) |
-| `--validate-proxy` | Test each proxy before use (slower but more reliable) |
-| `--no-proxy` | Disable proxy usage (use your own IP) |
-| `--quick` | Quick scan (fewer payloads, faster) |
-| `--pdf` | Generate PDF report (default: report.pdf) |
-| `--ai` | Enable AI analysis using CodeCraft Claude Opus 5 |
-| `--headless` | Enable headless verification for XSS (requires pyppeteer) |
-
-### Scan Mode (Default)
-When no attack flag is given, the script performs a full vulnerability scan.
-
-**Example:**
-```bash
-python ghostscanner.py -u https://target.com -v --proxy-list proxies.txt --validate-proxy --pdf --ai
+pip install -r requirements.txt
+pip install sqlmap arjun
 ```
 
-**What it does (all checks are performed automatically):**
-- Accesses the target with cloudscraper + proxy rotation
-- Extracts parameters, forms, and API endpoints
-- Performs domain classification (Government, Education, Police, Military, Medical, Business, Other)
-- Extracts sensitive data: NIK, NPWP, NIP, bank account numbers, bank names, WhatsApp numbers, KTP links, surat izin links, PDF links, area codes
-- Scans for SQLi and XSS with 1,000,000+ dynamically generated payloads
-- Runs Dalfox context‑aware XSS engine (HTML, Attribute, JavaScript, URL, DOM, CSP bypass, mXSS, Blind XSS)
-- Checks Business Logic Errors, Mass Assignment, and Rate Limit
-- Detects Deface with full PoC
-- Checks for WP Activity Log RCE (CVE‑2026‑54806)
-- Performs port scanning on common ports
-- Generates PoC for every finding (cURL + URL)
-- Optionally runs AI analysis and generates a PDF report
-- Saves results as JSON and auto‑generates an HTML report
-
-### Attack Mode
-Attack flags are mutually exclusive; choose one method at a time.
-
-| Flag | Method |
-|------|--------|
-| `--dos` | HTTP flood (Layer 7) using GET/POST/HEAD requests |
-| `--ddos` | Multi‑method attack: HTTP + SYN + SSL Renegotiation + UDP simultaneously |
-| `--syn` | SYN flood (Layer 4) – spoofed TCP SYN packets |
-| `--ssl-reneg` | SSL renegotiation attack – exhaust server resources |
-| `--udp` | UDP flood – sends large UDP packets to random ports |
-
-Additional attack options:
-- `--threads N` – Number of concurrent threads (default: 200, max recommended 1000)
-- `--duration N` – Attack duration in seconds (default: 30)
-
-**Examples:**
+**Jika ada error "externally-managed-environment"**:
 ```bash
-# HTTP flood for 60 seconds with 500 threads
-python ghostscanner.py -u https://target.com --dos --threads 500 --duration 60
-
-# Full DDOS (HTTP+SYN+SSL+UDP) with proxy rotation
-python ghostscanner.py -u https://target.com --ddos --threads 300 --duration 30 --proxy-list proxies.txt
-
-# SYN flood only
-python ghostscanner.py -u https://target.com --syn --threads 200 --duration 20
+pip install --break-system-packages -r requirements.txt
+pip install --break-system-packages sqlmap arjun
 ```
 
-### WordPress Activity Log Exploit (CVE‑2026‑54806)
+### Step 5 – Install Go Tools (Termux)
 
-| Option | Description |
-|--------|-------------|
-| `--wp-check` | Check if target is vulnerable to CVE‑2026‑54806 |
-| `--wp-command CMD` | Execute a system command via blind RCE |
-
-**Examples:**
 ```bash
-python ghostscanner.py -u https://target.com --wp-check
-python ghostscanner.py -u https://target.com --wp-command "id"
+go install -v github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest
+go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
+go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest
+go install -v github.com/projectdiscovery/naabu/v2/cmd/naabu@latest
+go install github.com/projectdiscovery/katana/cmd/katana@latest
+go install github.com/ffuf/ffuf/v2@latest
+go install github.com/hahwul/dalfox/v2@latest
+go install -v github.com/owasp-amass/amass/v5/cmd/amass@main
+go install -v github.com/projectdiscovery/dnsx/cmd/dnsx@latest
+go install github.com/lc/gau/v2/cmd/gau@latest
+go install github.com/tomnomnom/waybackurls@latest
+go install -v github.com/projectdiscovery/interactsh/cmd/interactsh-client@latest
 ```
+
+**Catatan Termux:** Beberapa tool mungkin gagal compile karena keterbatasan environment. Jika demikian, gunakan flag:
+```bash
+GODEBUG=madvdontneed=1 go install -v github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest
+```
+
+### Step 6 – Add GOPATH to PATH
+
+```bash
+export PATH=$PATH:$HOME/go/bin
+
+# Permanen (tambahkan ke ~/.bashrc)
+echo 'export PATH=$PATH:$HOME/go/bin' >> ~/.bashrc
+source ~/.bashrc
+```
+
+### Step 7 – Install SecretFinder
+
+```bash
+git clone https://github.com/m4ll0k/SecretFinder.git ~/SecretFinder
+pip install -r ~/SecretFinder/requirements.txt
+```
+
+### Step 8 – Run Ghost Scanner
+
+```bash
+python3 ghostscanner.py -u https://target.com -v --ai --pdf --tools
+```
+
+**Catatan:** Di Termux, mungkin perlu mengurangi thread untuk menghindari memory error:
+```bash
+python3 ghostscanner.py -u https://target.com --quick --threads 50
+```
+
+---
+
+## 4. WINDOWS INSTALLATION
+
+### Step 1 – Install Python
+
+1. Buka [python.org/downloads](https://www.python.org/downloads/)
+2. Download installer Python 3.11+ (Windows installer 64-bit)
+3. **PENTING:** Centang **"Add Python to PATH"** saat instalasi
+4. Klik **Install Now**
+
+Verifikasi (buka PowerShell baru):
+```powershell
+python --version
+pip --version
+```
+
+### Step 2 – Install Go
+
+1. Buka [go.dev/dl](https://go.dev/dl/)
+2. Download **`go1.xx.x.windows-amd64.msi`** (versi terbaru)
+3. **Double-click** file `.msi`
+4. Ikuti wizard: Next → Next → Install (default path: `C:\Program Files\Go`)
+5. **Tutup PowerShell, buka lagi** (biar PATH kebaca)
+
+Verifikasi:
+```powershell
+go version
+```
+
+### Step 3 – Install Git
+
+1. Buka [git-scm.com/download/win](https://git-scm.com/download/win)
+2. Download dan install Git for Windows
+3. Default settings OK
+
+Verifikasi:
+```powershell
+git --version
+```
+
+### Step 4 – Clone Repository
+
+Buka **PowerShell**, jalankan:
+```powershell
+cd "C:\Users\asus\Downloads"
+git clone https://github.com/cozyleon00b-dev/ghost-scanner.git
+cd ghost-scanner
+```
+
+### Step 5 – Install Python Dependencies
+
+```powershell
+pip install -r requirements.txt
+pip install sqlmap arjun
+```
+
+**Jika ada error "externally-managed-environment"**:
+```powershell
+pip install --break-system-packages -r requirements.txt
+pip install --break-system-packages sqlmap arjun
+```
+
+### Step 6 – Install Go Tools
+
+**Jalankan satu per satu** di PowerShell:
+```powershell
+go install -v github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest
+go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
+go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest
+go install -v github.com/projectdiscovery/naabu/v2/cmd/naabu@latest
+go install github.com/projectdiscovery/katana/cmd/katana@latest
+go install github.com/ffuf/ffuf/v2@latest
+go install github.com/hahwul/dalfox/v2@latest
+go install -v github.com/owasp-amass/amass/v5/cmd/amass@main
+go install -v github.com/projectdiscovery/dnsx/cmd/dnsx@latest
+go install github.com/lc/gau/v2/cmd/gau@latest
+go install github.com/tomnomnom/waybackurls@latest
+go install -v github.com/projectdiscovery/interactsh/cmd/interactsh-client@latest
+```
+
+### Step 7 – Add GOPATH\bin to PATH (PowerShell)
+
+```powershell
+# Cek dulu di mana Go install binary
+go env GOPATH
+# Biasanya: C:\Users\asus\go
+
+# Tambah ke PATH (sesi ini saja)
+$env:Path += ";" + (go env GOPATH) + "\bin"
+
+# Permanen (tutup dan buka ulang PowerShell setelah ini)
+[Environment]::SetEnvironmentVariable("Path", $env:Path + ";" + (go env GOPATH) + "\bin", [EnvironmentVariableTarget]::User)
+```
+
+### Step 8 – Install SecretFinder
+
+```powershell
+git clone https://github.com/m4ll0k/SecretFinder.git $env:USERPROFILE\SecretFinder
+```
+
+### Step 9 – Verify Installation
+
+Buka **PowerShell baru**, jalankan:
+```powershell
+nuclei -version
+subfinder -version
+httpx -version
+dalfox version
+sqlmap --version
+```
+
+### Step 10 – Run Ghost Scanner
+
+```powershell
+cd "C:\Users\asus\Downloads\ghost-scanner"
+python ghostscanner.py -u https://target.com -v --ai --pdf --tools --force-admin
+```
+
+**Catatan:** Di Windows, gunakan `python` (bukan `python3`).
+
+---
+
+## 5. MACOS INSTALLATION
+
+### Step 1 – Install Homebrew (Jika Belum Ada)
+
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
+### Step 2 – Install Prerequisites
+
+```bash
+brew install python3 git go
+```
+
+### Step 3 – Clone Repository
+
+```bash
+git clone https://github.com/cozyleon00b-dev/ghost-scanner.git
+cd ghost-scanner
+```
+
+### Step 4 – Install Python Dependencies
+
+```bash
+pip3 install -r requirements.txt
+pip3 install sqlmap arjun
+```
+
+**Jika ada error "externally-managed-environment"**:
+```bash
+pip3 install --break-system-packages -r requirements.txt
+pip3 install --break-system-packages sqlmap arjun
+```
+
+### Step 5 – Install Go Tools
+
+```bash
+go install -v github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest
+go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
+go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest
+go install -v github.com/projectdiscovery/naabu/v2/cmd/naabu@latest
+go install github.com/projectdiscovery/katana/cmd/katana@latest
+go install github.com/ffuf/ffuf/v2@latest
+go install github.com/hahwul/dalfox/v2@latest
+go install -v github.com/owasp-amass/amass/v5/cmd/amass@main
+go install -v github.com/projectdiscovery/dnsx/cmd/dnsx@latest
+go install github.com/lc/gau/v2/cmd/gau@latest
+go install github.com/tomnomnom/waybackurls@latest
+go install -v github.com/projectdiscovery/interactsh/cmd/interactsh-client@latest
+```
+
+### Step 6 – Add GOPATH to PATH
+
+```bash
+export PATH=$PATH:$(go env GOPATH)/bin
+
+# Permanen (tambahkan ke ~/.zshrc)
+echo 'export PATH=$PATH:$(go env GOPATH)/bin' >> ~/.zshrc
+source ~/.zshrc
+```
+
+### Step 7 – Install SecretFinder
+
+```bash
+git clone https://github.com/m4ll0k/SecretFinder.git ~/SecretFinder
+pip3 install -r ~/SecretFinder/requirements.txt
+```
+
+### Step 8 – Run Ghost Scanner
+
+```bash
+python3 ghostscanner.py -u https://target.com -v --ai --pdf --tools --force-admin
+```
+
+---
+
+## USAGE EXAMPLES
+
+### Full Scan (All Features)
+
+**Linux / Termux / macOS:**
+```bash
+python3 ghostscanner.py -u https://target.com -v --ai --pdf --tools --force-admin
+```
+
+**Windows:**
+```powershell
+python ghostscanner.py -u https://target.com -v --ai --pdf --tools --force-admin
+```
+
+### Quick Scan (No External Tools, No AI)
+
+```bash
+python3 ghostscanner.py -u https://target.com --quick
+```
+
+### Scan with Proxy Rotation
+
+```bash
+python3 ghostscanner.py -u https://target.com -v --proxy-list proxies.txt --validate-proxy --ai --pdf
+```
+
+### Stealth Mode (Slow Delay, No Proxy)
+
+```bash
+python3 ghostscanner.py -u https://target.com --no-proxy --delay 2.0
+```
+
+### Force Admin Login + Deep Extraction
+
+```bash
+python3 ghostscanner.py -u https://target.com --force-admin --ai --pdf
+```
+
+### Check WP Activity Log CVE Only
+
+```bash
+python3 ghostscanner.py -u https://target.com --wp-check
+```
+
+### Exploit WP Activity Log (Blind RCE)
+
+```bash
+python3 ghostscanner.py -u https://target.com --wp-command "id"
+```
+
+### HTTP Flood (DOS)
+
+```bash
+python3 ghostscanner.py -u https://target.com --dos --threads 500 --duration 60
+```
+
+### Full DDOS (All Methods)
+
+```bash
+python3 ghostscanner.py -u https://target.com --ddos --threads 300 --duration 30
+```
+
+### SYN Flood Only
+
+```bash
+python3 ghostscanner.py -u https://target.com --syn --threads 200 --duration 20
+```
+
+### SSL Renegotiation Only
+
+```bash
+python3 ghostscanner.py -u https://target.com --ssl-reneg --threads 150 --duration 30
+```
+
+### UDP Flood Only
+
+```bash
+python3 ghostscanner.py -u https://target.com --udp --threads 100 --duration 30
+```
+
+## EXTERNAL TOOLS INTEGRATED
+
+| # | Tool | Function |
+|---|------|----------|
+| 1 | **Nuclei** | Template‑based vulnerability scanning (CVE, misconfigurations) |
+| 2 | **Subfinder** | Passive subdomain enumeration |
+| 3 | **httpx** | Live host probing (status, title, tech detection) |
+| 4 | **Naabu** | Fast port scanning |
+| 5 | **Katana** | Web crawling & hidden endpoint discovery |
+| 6 | **ffuf** | Web fuzzing (directory/file/parameter discovery) |
+| 7 | **sqlmap** | Automated SQL injection testing |
+| 8 | **Dalfox** | XSS scanning & parameter analysis |
+| 9 | **Amass** | Attack‑surface mapping & asset discovery |
+| 10 | **dnsx** | DNS resolution, wildcard detection, probing |
+| 11 | **gau** | Historical URL fetcher |
+| 12 | **waybackurls** | Wayback Machine URL fetcher |
+| 13 | **Arjun** | Hidden HTTP parameter discovery |
+| 14 | **SecretFinder** | API key / secret detection in JavaScript |
+| 15 | **Interactsh** | Out‑of‑band interaction detection |
+
+### Perintah Update Semua Go Tools
+
+**Linux / Termux / macOS:**
+```bash
+go install -v github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest
+go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
+go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest
+go install -v github.com/projectdiscovery/naabu/v2/cmd/naabu@latest
+go install github.com/projectdiscovery/katana/cmd/katana@latest
+go install github.com/ffuf/ffuf/v2@latest
+go install github.com/hahwul/dalfox/v2@latest
+go install -v github.com/owasp-amass/amass/v5/cmd/amass@main
+go install -v github.com/projectdiscovery/dnsx/cmd/dnsx@latest
+go install github.com/lc/gau/v2/cmd/gau@latest
+go install github.com/tomnomnom/waybackurls@latest
+go install -v github.com/projectdiscovery/interactsh/cmd/interactsh-client@latest
+```
+
+**Windows PowerShell:** (sama, tapi jalankan satu per satu)
 
 ## PROXY CONFIGURATION
 
-Ghost Scanner supports HTTP, HTTPS, and SOCKS5 proxies. They are used for both scanning and attacks to hide your IP and distribute requests.
+### File Format `proxies.txt`
 
-### Proxy File Format
 ```
 http://username:password@192.168.1.100:8080
 socks5://proxy.example.com:1080
 http://203.0.113.50:3128
 ```
-- Lines starting with `#` are ignored.
-- If no protocol is specified, `http://` is assumed.
-- Use `--validate-proxy` to remove dead proxies before use (increases startup time).
 
-### Built‑in Proxy List
-If no proxy file is provided and `--no-proxy` is not set, a default set of free public proxies is loaded automatically from ProxyScrape API.
+- Baris dengan `#` di depan diabaikan
+- Jika tidak ada protocol, dianggap `http://`
+- Gunakan `--validate-proxy` untuk filter proxy mati
+- Jika tidak ada file, otomatis fetch dari **ProxyScrape API**
 
-## OUTPUT AND REPORTS
+### Contoh Penggunaan
 
-After a scan, the following files are generated:
-
-1. **JSON file** (`scan_<timestamp>.json`) – contains all raw data, vulnerabilities, PoCs, sensitive findings, SQL extracted data, and statistics. Suitable for automated parsing.
-
-2. **HTML report** (`scan_<timestamp>.html`) – human‑readable summary with vulnerability categories, payload examples, and extracted sensitive information.
-
-3. **PDF report** (`report_<timestamp>.pdf`) – if `--pdf` is enabled, a professional printable report with all findings, PoCs, and AI analysis (if `--ai` is set).
-
-The JSON structure includes:
-- `target`, `domain`, `domain_category` (Government, Education, Police, Military, Medical, Business, Other)
-- `vulnerabilities` – grouped by type, with parameters, payloads, confidence scores, evidence, and PoC (cURL + URL)
-- `sensitive_data` – NIK, NPWP, NIP, bank accounts, bank names, WhatsApp numbers, KTP links, surat izin links, PDF links, area codes (province, kabupaten, kecamatan), emails, phones, API keys, JWT tokens, source code snippets
-- `sql_extracted` – database name, tables, columns, sample data
-- `ports` – open ports discovered
-- `summary` – total findings and risk distribution
-- `ai_analysis` – AI-generated summary and recommendations (if enabled)
-
-## TUTORIAL – STEP BY STEP
-
-### Scenario 1: Full Scan with AI + PDF
 ```bash
-python ghostscanner.py -u https://target.com -v --ai --pdf
+python3 ghostscanner.py -u https://target.com --proxy-list proxies.txt --validate-proxy
 ```
-- Automatically classifies domain type
-- Extracts all sensitive Indonesian data (NIK, NPWP, NIP, bank, etc.)
-- Runs SQLi, XSS (Dalfox), Business Logic, Mass Assignment, Rate Limit, Deface, WP Log checks
-- Generates JSON, HTML, and PDF reports
-- AI analysis with actionable recommendations
 
-### Scenario 2: Quick Scan (Fast)
-```bash
-python ghostscanner.py -u https://target.com --quick
-```
-- Uses fewer payloads per category
-- Skips AI and PDF generation
-- Ideal for initial reconnaissance
+## OUTPUT & REPORTS
 
-### Scenario 3: Conducting a DDOS Test on Your Own Server
-```bash
-python ghostscanner.py -u https://your-server.com --ddos --threads 250 --duration 15
+Setelah scan, struktur folder:
+
 ```
-- Simulates a distributed attack with multiple methods
-- Useful for capacity testing and firewall rule validation
+results/
+├── scan_<timestamp>.json            # Semua data scan
+└── report_<timestamp>.pdf           # Report utama (jika --pdf)
+
+sensitive_data/
+├── nik_<ts>.txt                     # Raw sensitive data
+├── npwp_<ts>.txt
+├── nip_<ts>.txt
+├── no_rekening_<ts>.txt
+├── bank_<ts>.txt
+├── emails_<ts>.txt
+├── phones_<ts>.txt
+├── whatsapp_<ts>.txt
+├── pin_<ts>.txt
+├── api_keys_<ts>.txt
+├── jwt_tokens_<ts>.txt
+├── source_code_<ts>.txt
+├── admin_deep_<ts>.json             # Admin panel deep extraction
+├── exports/                         # File download dari admin
+│   ├── users.sql
+│   ├── backup.zip
+│   └── ...
+└── pdfs/                            # PDF terpisah per kategori sensitif
+    ├── nik_<ts>.pdf
+    ├── ktp_links_<ts>.pdf
+    ├── kk_links_<ts>.pdf
+    ├── no_rekening_<ts>.pdf
+    ├── bank_<ts>.pdf
+    ├── phones_<ts>.pdf
+    ├── whatsapp_<ts>.pdf
+    ├── emails_<ts>.pdf
+    ├── pin_<ts>.pdf
+    ├── api_keys_<ts>.pdf
+    ├── jwt_tokens_<ts>.pdf
+    ├── source_code_<ts>.pdf
+    ├── admin_users_<ts>.pdf
+    ├── admin_buyers_<ts>.pdf
+    ├── admin_employees_<ts>.pdf
+    ├── admin_orders_<ts>.pdf
+    └── admin_products_<ts>.pdf
+```
 
 ## TROUBLESHOOTING
 
-### Common Issues & Solutions
-
-| Issue | Solution |
-|-------|----------|
-| `ModuleNotFoundError: No module named 'cloudscraper'` | Install missing package: `pip install cloudscraper` |
-| SSL certificate errors | Add `--no-proxy` or use `verify=False` (already set) |
-| Scan takes too long | Use `--quick` to reduce payload count |
-| Proxy validation fails | Ensure proxies are reachable; try without `--validate-proxy` |
-| `fake-useragent` errors | Install: `pip install fake-useragent` |
-| Permission denied (Linux) | Run `chmod +x ghostscanner.py` |
-| Termux: `pkg` not found | Make sure you are using Termux (not a normal shell) |
+| Masalah | Solusi |
+|---------|--------|
+| `ModuleNotFoundError: No module named 'cloudscraper'` | `pip install cloudscraper` |
+| `go: command not found` | Restart terminal setelah install Go, atau tambahkan `C:\Program Files\Go\bin` (Windows) / `/usr/local/go/bin` (Linux) ke PATH |
+| `nuclei: command not found` | Linux/Termux: `export PATH=$PATH:$(go env GOPATH)/bin` / Windows: `$env:Path += ";" + (go env GOPATH) + "\bin"` |
+| `pip: command not found` | Pakai `python3 -m pip install ...` (Linux/Termux/macOS) atau `python -m pip install ...` (Windows) |
+| Proxy validation fails | Coba tanpa `--validate-proxy` |
+| Scan terlalu lambat | Gunakan `--quick` |
+| AI timeout | Otomatis retry 3x dengan timeout 180s |
+| `Permission denied` (Linux) | `chmod +x ghostscanner.py` |
+| Termux: `pkg` not found | Pastikan pakai Termux (bukan shell biasa) |
+| `externally-managed-environment` error | Tambah `--break-system-packages` atau pakai venv |
+| Windows: `python3` not found | Gunakan `python` (bukan `python3`) |
+| Windows: `cd` error | Gunakan tanda kutip: `cd "C:\Users\asus\Downloads\ghost-scanner"` |
+| SecretFinder tidak jalan | Cek path: `ls ~/SecretFinder/SecretFinder.py` (Linux) / `Test-Path $env:USERPROFILE\SecretFinder\SecretFinder.py` (Windows) |
 
 ### Performance Tips
-- For faster scans, use `--quick` (reduces payloads to 10 per category).
-- Increase `--threads` for port scanning (default 300).
-- Use a reliable proxy list to avoid rate‑limiting.
+
+- `--quick` mengurangi payload jadi 10 per kategori
+- `--tools` hanya jalankan jika external tools terinstall
+- `--no-proxy` untuk testing lokal/internal
+- `--delay 0.3` untuk scan lebih cepat (lebih mudah terdeteksi)
+- `--delay 2.0` untuk stealth (lebih lambat tapi aman)
 
 ## DISCLAIMER
 
-Ghost Scanner is a powerful tool designed for **ethical security research, penetration testing, and educational purposes**.
+Ghost Scanner dirancang untuk **ethical security research, penetration testing, dan authorized security assessment**.
 
-- **You must have explicit authorisation** to test any system that you do not own.
-- Unauthorised use of this tool is illegal and may result in severe criminal penalties.
-- The author (ARGA NOT DEV) is **not responsible** for any misuse, damage, or legal consequences arising from the use of this software.
-- By using this tool, you agree to accept full responsibility for your actions and to use it only in compliance with all applicable laws.
+- **Anda harus memiliki izin eksplisit** untuk menguji sistem yang bukan milik Anda
+- Penggunaan tanpa izin adalah ilegal dan dapat mengakibatkan hukuman pidana berat
+- Author (**ARGA NOT DEV**) **tidak bertanggung jawab** atas penyalahgunaan, kerusakan, atau konsekuensi hukum
+- Dengan menggunakan tool ini, Anda menerima tanggung jawab penuh atas tindakan Anda
+
 
 ## VERSION HISTORY
 
+- **4.5 (OMNI TOOLS+)** – 2026‑09‑10
+  - Integrasi 15 external tools (Nuclei, Subfinder, httpx, Naabu, Katana, ffuf, sqlmap, Dalfox, Amass, dnsx, gau, waybackurls, Arjun, SecretFinder, Interactsh)
+  - PDF terpisah per kategori sensitif (NIK, KTP, KK, HP, Email, Bank, Rekening, PIN, API, Source Code, Admin Users/Buyers/Employees/Orders)
+  - PIN extraction
+  - KK links extraction
+  - Auto-skip WP check jika bukan WordPress
+
+- **4.4 (GHOST MULTI‑TOOLS+)** – 2026‑09‑10
+  - Sneijderlino methods (robots.txt, sitemap, dir enum, sensitive files, security headers, WAF detection, CORS, open redirect, SSL info, cookie flags, rate limit, CSRF)
+  - Banner Ghost Multi-Tools
+  - PoC verification 5x
+
+- **4.3 (ADMIN DATABASE EXTRACTOR)** – 2026‑09‑10
+  - Deep admin data extraction (crawl 22+ halaman, download export, DB config leaks)
+  - E-commerce detection
+  - AI real solutions prompt (8 section)
+
 - **4.2 (SENSITIVE HUNTER)** – 2026‑09‑10
-  - Added domain classification (Government, Education, Police, Military, Medical, Business, Other)
-  - Added sensitive Indonesian data extraction: NIK, NPWP, NIP, bank account numbers, bank names, WhatsApp numbers, KTP links, surat izin links, PDF links, area codes
-  - Integrated ProxyScrape API for dynamic proxy fetching
-  - Enhanced sensitive data extraction with deduplication and context detection
-  - Updated PDF report to include domain category and all sensitive data
-  - All previous features from v4.1 retained and improved
+  - Domain classification
+  - Indonesian sensitive data extraction
+  - ProxyScrape API integration
 
 - **4.1 (OMNI XSS + WP LOG EXPLOIT)** – 2026‑09‑09
-  - Added Dalfox XSS engine (context‑aware, DOM, CSP bypass, mXSS, Blind XSS)
-  - Integrated CVE‑2026‑54806 detection and blind RCE exploitation
-  - Added full Deface PoC with curl, indicators, and screenshot simulation
-  - Enhanced AI analysis for PoC evaluation and recommendations
+  - Dalfox XSS engine (context-aware, DOM, CSP bypass, mXSS, Blind XSS)
+  - CVE‑2026‑54806 detection & exploitation
+  - Deface full PoC
 
 - **3.5 (ULTRA SAVAGE)** – 2026‑09‑08
-  - Added 1,000,000+ SQLi and XSS payloads
-  - Integrated AI analysis with `--ai` flag
-  - Added PDF report generation with `--pdf` flag
-  - Implemented PoC generation (cURL + URL) for every finding
-  - Added SQL data extraction (database, tables, columns, sample data)
-  - Enhanced sensitive data extraction: NIK, KTP, NPWP, employee/staff data
-  - Added Business Logic Error, Mass Assignment, and Rate Limit checks
+  - 1M+ SQLi & XSS payloads
+  - AI analysis + PDF
+  - SQL data extraction
+  - PoC generation
 
 - **2.0 (FAST DEMON)** – 2026‑09‑03
-  - Optimised payload count for speed (30 per category)
-  - Added `--quick` mode (10 payloads)
-  - Improved progress bars and non‑blocking behaviour
-  - Custom help menu with clear screen and loading animation
-  - Enhanced proxy validation and rotation
+  - Speed optimization
+  - Custom help menu
+  - Proxy validation
 
 - **1.0 (DEMON)** – 2026‑08‑31
-  - Initial release with 150k+ payloads, WAF bypass, double validation, attack engine, HTML/JSON reporting
+  - Initial release
+
 
 ## CONTACT
 
-For support, suggestions, or collaboration, please contact the developer via the official channel (if any). This project is maintained by **ARGA NOT DEV**.
+Maintained by **ARGA NOT DEV**  
+GitHub: [https://github.com/cozyleon00b-dev](https://github.com/cozyleon00b-dev)
+
 
 ## ACKNOWLEDGEMENTS
 
-Special thanks to the open‑source community for the libraries and inspiration that made this tool possible.
+Special thanks to open‑source community dan project berikut:
+
+- ProjectDiscovery (Nuclei, Subfinder, httpx, Naabu, Katana, dnsx, Interactsh)
+- OWASP Amass
+- ffuf, sqlmap, Dalfox, gau, waybackurls, Arjun, SecretFinder
+- Cloudscraper, Rich, fpdf2
 
 **THANKS TO**
 1. God
@@ -329,8 +776,9 @@ Special thanks to the open‑source community for the libraries and inspiration 
 4. Bestfriends
 5. Friends
 
-**JOIN CYBERSECURITY TELEGRAM**  
+**JOIN CYBERSECURITY GROUP TELEGRAM**  
 [https://t.me/roompubiccybersecurity](https://t.me/roompubiccybersecurity)
-[https://t.me/+NP7XHa6AIZRmNGU1](https://t.me/+NP7XHa6AIZRmNGU1)
+
+
 **ALL COPYRIGHT RESERVED**  
 © 2026 GhostTeam – Ghost Scanner

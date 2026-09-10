@@ -1,5 +1,5 @@
 # ============================================================
-# GHOST SCANNER v4.2 – SENSITIVE HUNTER
+# GHOST SCANNER v4.5 – OMNI TOOLS+
 # Core Dependencies
 # ============================================================
 
@@ -11,15 +11,22 @@ requests>=2.31.0
 # CLI & UI
 rich>=13.7.1
 
-# Encryption (for sensitive data handling)
+# Encryption
 cryptography>=42.0.0
 
-# PDF Report Generator
+# PDF Report
 fpdf>=1.7.2
 
 # ============================================================
-# Optional Dependencies
+# External Tools (Install via go/pip - see README)
 # ============================================================
-# For headless XSS verification (--headless flag)
-# pyppeteer>=2.0.0
-# Note: pyppeteer requires additional setup; install only if needed.
+# Go tools (install manually with `go install`):
+#   - nuclei, subfinder, httpx, naabu, katana, ffuf, dalfox,
+#     amass, dnsx, gau, waybackurls, interactsh-client
+# Python tools:
+#   - sqlmap (pip install sqlmap)
+#   - arjun (pip install arjun)
+#   - SecretFinder (git clone https://github.com/m4ll0k/SecretFinder)
+#
+# Optional:
+# pyppeteer>=2.0.0  # for headless XSS verification
