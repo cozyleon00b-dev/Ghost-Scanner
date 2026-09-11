@@ -1,31 +1,33 @@
-# GHOST SCANNER – OMNI TOOLS+ X
+# GHOST SCANNER – OMNI TOOLS X SAVAGE
 
 **All‑in‑One Security Assessment & Penetration Testing Framework**  
-Version 4.6 – OMNI TOOLS+ X  
-Release Date: 2026‑09‑11
+Version 5.0 – OMNI TOOLS X SAVAGE  
+Release Date: 2026‑09‑11  
+Developer: GhostTeam
 
 ---
 
 ## OVERVIEW
 
-Ghost Scanner is a modular, high‑performance security assessment framework designed for ethical hacking, vulnerability assessment, and stress testing. It combines internal engines with **19 industry‑standard external tools**, generating comprehensive reports (JSON, HTML, PDF) with AI‑powered analysis and separate PDF outputs for each sensitive data category.
+Ghost Scanner is a modular, high‑performance security assessment framework designed for ethical hacking, vulnerability assessment, and authorized stress testing. It combines internal engines with **19 industry‑standard external tools**, unified scanning, real DDoS/DoS engine, AI‑powered analysis, and comprehensive reporting in JSON, HTML, and PDF.
 
 ### Key Capabilities
 
-- **Advanced Web Vulnerability Scanning** – SQLi, XSS (Dalfox context‑aware), LFI, RFI, Command Injection, SSTI, NoSQL, LDAP, XXE, SSRF, Path Traversal, Deserialization, RCE, Business Logic Errors, Mass Assignment, Rate Limit
-- **19 External Tools Integration** – Nuclei, Subfinder, httpx, Naabu, Katana, ffuf, sqlmap, Dalfox, Amass, dnsx, gau, waybackurls, Arjun, SecretFinder, Interactsh, **Nmap, Metasploit, Wireshark (tshark), BurpSuite**
-- **Deface Detection** – full PoC with 22+ indicators, title extraction, curl command, screenshot simulation
-- **WordPress Activity Log RCE (CVE‑2026‑54806)** – detection & blind command execution (auto‑skip if not WordPress)
-- **Admin Deep Extraction** – after successful admin login bypass, crawls 22+ admin pages, extracts tables, downloads exports (.sql, .csv, .zip, .json), detects database config leaks
+- **Unified Scan Mode** – one command `--scan` runs SQLi, XSS, WP, Deface, DDoS check, JWT, HTTP Smuggling, GraphQL, OAuth, admin bypass, sensitive data extraction, and more in a single pass
+- **19 External Tools Integration** – Nuclei, Subfinder, httpx, Naabu, Katana, ffuf, sqlmap, Dalfox, Amass, dnsx, gau, waybackurls, Arjun, SecretFinder, Interactsh, Nmap, Metasploit, Wireshark (tshark), BurpSuite
+- **Real DDoS/DoS Engine** – socket‑based HTTP flood, SYN flood, SSL renegotiation, UDP flood with real‑time stats (no simulation)
+- **Advanced Web Vulnerability Scanning** – SQLi (1M+ payloads), XSS (Dalfox context‑aware + 1M payloads), LFI, RFI, Command Injection, SSTI, NoSQL, LDAP, XXE, SSRF, Path Traversal, Deserialization, RCE
+- **Deface Detection** – advanced pattern matching with 20+ indicators, title extraction, curl command, verified 3x
+- **WordPress Activity Log RCE (CVE‑2026‑54806)** – detection and blind command execution (auto‑skip if not WordPress)
+- **Admin Deep Extraction** – login bypass, crawl 22+ admin pages, extract tables, download exports (.sql, .csv, .zip, .json), detect database config leaks
 - **E‑commerce Detection** – identifies domain/hosting/VPS provider, extracts products, prices, buyers, employees
 - **Sensitive Data Extraction (Indonesia)** – NIK (with province/kabupaten/kecamatan parsing), NPWP, NIP, bank accounts, bank names, WhatsApp, PIN, KTP links, KK links, Surat Izin links, PDF links, API keys, JWT, cloud keys, source code
-- **Separate PDF per Sensitive Category** – each data type (NIK, KTP, KK, HP, Email, Bank, Rekening, PIN, API, Source Code, Admin Users/Buyers/Employees/Orders/Products) gets its own PDF
-- **AI Analysis (Claude Opus 5 via CodeCraft)** – 8‑section report: executive summary, critical findings, high findings, sensitive data analysis (UU PDP/GDPR), prioritized remediation, further testing suggestions, constructive critique, best practices
-- **PoC Verification 3x** – each finding is re‑verified 3 times (min. 2/3 must match) to eliminate false positives
-- **IP Safety / Anti‑Ban** – double‑layer adaptive delay with jitter, proxy rotation (ProxyScrape API), user‑agent rotation, cloudscraper + fallback, exponential backoff
+- **Separate PDF per Sensitive Category** – each data type gets its own PDF (NIK, KTP, KK, HP, Email, Bank, Rekening, PIN, API, Source Code, Admin Users/Buyers/Employees/Orders/Products)
+- **AI Analysis (Claude Opus 5 via CodeCraft)** – 8‑section report: executive summary, critical findings, high findings, sensitive data analysis (UU PDP/GDPR), prioritized remediation, 30‑60‑90 day action plan, further testing suggestions, constructive critique, best practices
+- **PoC Verification 3x** – each finding re‑verified 3 times (min. 2/3 match) to eliminate false positives
+- **IP Safety / Anti‑Ban v2** – adaptive delay based on response time, proxy rotation (ProxyScrape API), user‑agent rotation, cloudscraper + fallback, exponential backoff
 - **Domain Classification** – Government, Education, Police, Military, Medical, Business, Other
-- **1M+ SQLi & XSS Payloads** – 1,000,000+ dynamically generated payloads
-- **DOS/DDOS Engine** – HTTP flood, SYN flood, SSL renegotiation, UDP flood (multi‑threaded)
+- **Interactive Menu** – menu lengkap dengan penjelasan tiap mode saat start tanpa argumen
 - **Cross‑Platform** – Windows, Linux (Kali/Ubuntu/Arch/BlackArch), Termux (Android), macOS
 - **NO WSL REQUIRED** – works natively on Windows
 
@@ -40,11 +42,12 @@ Ghost Scanner is intended for **authorized testing only**.
 3. [Termux (Android) Installation](#3-termux-android-installation)
 4. [Windows Installation](#4-windows-installation)
 5. [macOS Installation](#5-macos-installation)
-6. [Usage Examples](#usage-examples)
-7. [External Tools](#external-tools-integrated)
-8. [Output & Reports](#output--reports)
-9. [Troubleshooting](#troubleshooting)
-10. [Disclaimer](#disclaimer)
+6. [Interactive Menu](#interactive-menu)
+7. [Usage Examples](#usage-examples)
+8. [External Tools](#external-tools-integrated)
+9. [Output & Reports](#output--reports)
+10. [Troubleshooting](#troubleshooting)
+11. [Disclaimer](#disclaimer)
 
 ---
 
@@ -92,8 +95,6 @@ go install -v github.com/projectdiscovery/interactsh/cmd/interactsh-client@lates
 
 ```bash
 export PATH=$PATH:$(go env GOPATH)/bin
-
-# Permanen
 echo 'export PATH=$PATH:$(go env GOPATH)/bin' >> ~/.bashrc
 source ~/.bashrc
 ```
@@ -136,7 +137,7 @@ python3 ghostscanner.py --help
 ### Step 9 – Run Ghost Scanner
 
 ```bash
-python3 ghostscanner.py -u https://target.com -v --ai --pdf --tools --force-admin
+python3 ghostscanner.py -u https://target.com --scan --ai --pdf --tools --force-admin
 ```
 
 ---
@@ -210,7 +211,7 @@ sudo pacman -S nmap wireshark-qt
 ### Step 7 – Run Ghost Scanner
 
 ```bash
-python3 ghostscanner.py -u https://target.com -v --ai --pdf --tools --force-admin
+python3 ghostscanner.py -u https://target.com --scan --ai --pdf --tools --force-admin
 ```
 
 ---
@@ -280,7 +281,7 @@ pip install --break-system-packages -r ~/SecretFinder/requirements.txt
 ### Step 8 – Run Ghost Scanner
 
 ```bash
-python3 ghostscanner.py -u https://target.com -v --ai --pdf --tools
+python3 ghostscanner.py -u https://target.com --scan --ai --pdf --tools
 ```
 
 **Catatan:** Di Termux, mungkin perlu mengurangi thread untuk menghindari memory error:
@@ -403,19 +404,16 @@ git clone https://github.com/m4ll0k/SecretFinder.git
 
 Buka **CMD baru**:
 ```cmd
-nuclei -version
-subfinder -version
-httpx -version
-dalfox version
-nmap --version
-sqlmap --version
+where nuclei && where subfinder && where httpx && where naabu && where katana && where ffuf && where dalfox && where amass && where dnsx && where gau && where waybackurls && where interactsh-client
 ```
+
+Kalau semua muncul path `C:\Users\<user>\go\bin\xxx.exe`, berarti berhasil.
 
 ### Step 11 – Run Ghost Scanner
 
 ```cmd
 cd %USERPROFILE%\Downloads\Ghost-Scanner
-python ghostscanner.py -u https://target.com -v --ai --pdf --tools --force-admin
+python ghostscanner.py -u https://target.com --scan --ai --pdf --tools --force-admin
 ```
 
 **Catatan:** Di Windows, gunakan `python` (bukan `python3`). **NO WSL REQUIRED.**
@@ -485,23 +483,58 @@ pip3 install -r ~/SecretFinder/requirements.txt
 ### Step 8 – Run Ghost Scanner
 
 ```bash
-python3 ghostscanner.py -u https://target.com -v --ai --pdf --tools --force-admin
+python3 ghostscanner.py -u https://target.com --scan --ai --pdf --tools --force-admin
 ```
+
+---
+
+## INTERACTIVE MENU
+
+Jalankan Ghost Scanner tanpa argumen untuk membuka **menu interaktif** dengan penjelasan lengkap:
+
+```bash
+python ghostscanner.py
+```
+
+Menu yang muncul:
+
+```
+[1] SCAN (Unified)
+    Full automated scan dalam satu perintah:
+      SQLi (1M+ payloads), XSS (Dalfox + 1M), LFI/RFI/SSTI/XXE/SSRF,
+      WP Activity Log CVE, Deface, DDoS Check, JWT, HTTP Smuggling,
+      GraphQL, OAuth, Admin bypass, Sensitive data, AI + PDF.
+
+[2] TOOLS (External)
+    Jalankan 19 external tools (Nuclei, Subfinder, httpx, Naabu, Katana,
+    ffuf, sqlmap, Dalfox, Amass, dnsx, gau, waybackurls, Arjun,
+    SecretFinder, Interactsh, Nmap, Metasploit, Wireshark, BurpSuite).
+
+[3] ATTACK (Real DDoS/DoS)
+    Real attack engine (socket-based):
+      --dos HTTP Flood, --ddos Multi-method,
+      --syn SYN Flood, --ssl-reneg SSL Reneg, --udp UDP Flood.
+
+[4] HELP
+[0] EXIT
+```
+
+Setiap mode akan meminta target URL dan konfigurasi tambahan (AI, PDF, tools, force admin).
 
 ---
 
 ## USAGE EXAMPLES
 
-### Full Scan (All Features, 19 Tools)
+### Unified Scan (All Features, 19 Tools)
 
 **Linux / Termux / macOS:**
 ```bash
-python3 ghostscanner.py -u https://target.com -v --ai --pdf --tools --force-admin
+python3 ghostscanner.py -u https://target.com --scan --ai --pdf --tools --force-admin
 ```
 
 **Windows (CMD):**
 ```cmd
-python ghostscanner.py -u https://target.com -v --ai --pdf --tools --force-admin
+python ghostscanner.py -u https://target.com --scan --ai --pdf --tools --force-admin
 ```
 
 ### Quick Scan (No External Tools, No AI)
@@ -513,19 +546,19 @@ python3 ghostscanner.py -u https://target.com --quick
 ### Scan with Proxy Rotation
 
 ```bash
-python3 ghostscanner.py -u https://target.com -v --proxy-list proxies.txt --validate-proxy --ai --pdf
+python3 ghostscanner.py -u https://target.com --scan --proxy-list proxies.txt --validate-proxy --ai --pdf
 ```
 
 ### Stealth Mode (Slow Delay, No Proxy)
 
 ```bash
-python3 ghostscanner.py -u https://target.com --no-proxy --delay 2.0
+python3 ghostscanner.py -u https://target.com --scan --no-proxy --delay 2.0
 ```
 
 ### Force Admin Login + Deep Extraction
 
 ```bash
-python3 ghostscanner.py -u https://target.com --force-admin --ai --pdf
+python3 ghostscanner.py -u https://target.com --scan --force-admin --ai --pdf
 ```
 
 ### Check WP Activity Log CVE Only
@@ -534,16 +567,34 @@ python3 ghostscanner.py -u https://target.com --force-admin --ai --pdf
 python3 ghostscanner.py -u https://target.com --wp-check
 ```
 
-### HTTP Flood (DOS)
+### Real DDoS Attack (HTTP Flood)
 
 ```bash
-python3 ghostscanner.py -u https://target.com --dos --threads 500 --duration 60
+python3 ghostscanner.py -u https://your-server.com --dos --threads 500 --duration 60
 ```
 
-### Full DDOS (All Methods)
+### Full DDoS (All Methods)
 
 ```bash
-python3 ghostscanner.py -u https://target.com --ddos --threads 300 --duration 30
+python3 ghostscanner.py -u https://your-server.com --ddos --threads 300 --duration 30
+```
+
+### SYN Flood
+
+```bash
+python3 ghostscanner.py -u https://your-server.com --syn --threads 200 --duration 20
+```
+
+### SSL Renegotiation
+
+```bash
+python3 ghostscanner.py -u https://your-server.com --ssl-reneg --threads 150 --duration 30
+```
+
+### UDP Flood
+
+```bash
+python3 ghostscanner.py -u https://your-server.com --udp --threads 100 --duration 30
 ```
 
 ---
@@ -552,25 +603,25 @@ python3 ghostscanner.py -u https://target.com --ddos --threads 300 --duration 30
 
 | # | Tool | Function |
 |---|------|----------|
-| 1 | **Nuclei** | Template‑based vulnerability scanning |
-| 2 | **Subfinder** | Passive subdomain enumeration |
-| 3 | **httpx** | Live host probing |
-| 4 | **Naabu** | Fast port scanning |
-| 5 | **Katana** | Web crawling & endpoint discovery |
-| 6 | **ffuf** | Web fuzzing |
-| 7 | **sqlmap** | Automated SQL injection |
-| 8 | **Dalfox** | XSS scanning |
-| 9 | **Amass** | Attack‑surface mapping |
-| 10 | **dnsx** | DNS resolution & probing |
-| 11 | **gau** | Historical URL fetcher |
-| 12 | **waybackurls** | Wayback Machine URLs |
-| 13 | **Arjun** | Hidden HTTP parameter discovery |
-| 14 | **SecretFinder** | API key detection in JS |
-| 15 | **Interactsh** | Out‑of‑band interaction |
-| 16 | **Nmap** | Port scan + service detection |
-| 17 | **Metasploit** | Exploit module suggestions |
-| 18 | **Wireshark (tshark)** | Packet capture & verification |
-| 19 | **BurpSuite** | REST API integration for scanning |
+| 1 | Nuclei | Template‑based vulnerability scanning |
+| 2 | Subfinder | Passive subdomain enumeration |
+| 3 | httpx | Live host probing |
+| 4 | Naabu | Fast port scanning |
+| 5 | Katana | Web crawling & endpoint discovery |
+| 6 | ffuf | Web fuzzing |
+| 7 | sqlmap | Automated SQL injection |
+| 8 | Dalfox | XSS scanning |
+| 9 | Amass | Attack‑surface mapping |
+| 10 | dnsx | DNS resolution & probing |
+| 11 | gau | Historical URL fetcher |
+| 12 | waybackurls | Wayback Machine URLs |
+| 13 | Arjun | Hidden HTTP parameter discovery |
+| 14 | SecretFinder | API key detection in JS |
+| 15 | Interactsh | Out‑of‑band interaction |
+| 16 | Nmap | Port scan + service detection |
+| 17 | Metasploit | Exploit module suggestions |
+| 18 | Wireshark (tshark) | Packet capture & verification |
+| 19 | BurpSuite | REST API integration for scanning |
 
 ### Perintah Update Semua Go Tools
 
@@ -612,7 +663,7 @@ http://203.0.113.50:3128
 ### Contoh Penggunaan
 
 ```bash
-python3 ghostscanner.py -u https://target.com --proxy-list proxies.txt --validate-proxy
+python3 ghostscanner.py -u https://target.com --scan --proxy-list proxies.txt --validate-proxy
 ```
 
 ---
@@ -640,8 +691,8 @@ sensitive_data/
 ├── jwt_tokens_<ts>.txt
 ├── source_code_<ts>.txt
 ├── admin_deep_<ts>.json
-├── exports/                         # File download dari admin
-└── pdfs/                            # PDF terpisah per kategori sensitif
+├── exports/
+└── pdfs/
     ├── nik_<ts>.pdf
     ├── ktp_links_<ts>.pdf
     ├── kk_links_<ts>.pdf
@@ -679,7 +730,7 @@ sensitive_data/
 | `externally-managed-environment` error | Tambah `--break-system-packages` atau pakai venv |
 | Windows: `python3` not found | Gunakan `python` |
 | Windows: Device Guard blokir tool | Unblock file atau install WSL |
-| Windows: `UnicodeDecodeError` | Sudah di-fix di v4.6 (`errors='ignore'`) |
+| Windows: `UnicodeDecodeError` | Sudah di‑fix di v4.6+ (`errors='ignore'`) |
 | `The system cannot find the path specified` | Pakai tanda kutip: `cd "C:\path\to\folder"` |
 
 ### Performance Tips
@@ -696,8 +747,9 @@ sensitive_data/
 
 Ghost Scanner dirancang untuk **ethical security research, penetration testing, dan authorized security assessment**.
 
-- **Anda harus memiliki izin eksplisit** untuk menguji sistem yang bukan milik Anda
-- Penggunaan tanpa izin adalah ilegal dan dapat mengakibatkan hukuman pidana berat
+- Anda harus memiliki **izin eksplisit** untuk menguji sistem yang bukan milik Anda
+- Penggunaan tanpa izin adalah **ilegal** dan dapat mengakibatkan hukuman pidana berat
+- **DDoS/DoS** ke server orang lain adalah **tindak pidana**. Gunakan **hanya pada server milik Anda sendiri**
 - Author (**ARGA NOT DEV**) **tidak bertanggung jawab** atas penyalahgunaan, kerusakan, atau konsekuensi hukum
 - Dengan menggunakan tool ini, Anda menerima tanggung jawab penuh atas tindakan Anda
 
@@ -705,45 +757,53 @@ Ghost Scanner dirancang untuk **ethical security research, penetration testing, 
 
 ## VERSION HISTORY
 
+- **5.0 (OMNI TOOLS X SAVAGE)** – 2026‑09‑11
+  - Unified scan mode (`--scan` gas semua sekaligus)
+  - Real DDoS/DoS engine (socket‑based, real‑time stats)
+  - Interactive menu dengan penjelasan lengkap
+  - Rebranding skull banner (ARGA NOT DEV)
+  - Fix interactive prompt (loop kalau kosong)
+  - No error, no bug
+
+- **4.7 (OMNI TOOLS+ X FINAL)** – 2026‑09‑11
+  - DDoS vulnerability check
+  - Advanced deface detection
+  - JWT attack, HTTP smuggling, Subdomain takeover
+  - GraphQL introspection, OAuth bypass
+
 - **4.6 (OMNI TOOLS+ X)** – 2026‑09‑11
-  - 4 new tools: **Nmap, Metasploit, Wireshark (tshark), BurpSuite**
-  - Fix `UnicodeDecodeError` di subprocess (encoding='utf-8', errors='ignore')
-  - 1M+ XSS & SQLi payloads
-  - Anti-ban double-layer delay with jitter
-  - PoC verification 3x (2/3 match)
-  - Skull banner baru
-  - NO WSL required di Windows
+  - 4 new tools: Nmap, Metasploit, Wireshark, BurpSuite
+  - Fix UnicodeDecodeError
+  - Anti‑ban double‑layer delay
+  - PoC verification 3x
 
 - **4.5 (OMNI TOOLS+)** – 2026‑09‑10
   - 15 external tools integration
   - Separate PDF per sensitive data category
   - PIN extraction, KK links
-  - Auto-skip WP check
+  - Auto‑skip WP check
 
 - **4.4 (GHOST MULTI‑TOOLS+)** – 2026‑09‑10
-  - Sneijderlino methods (robots.txt, sitemap, dir enum, sensitive files, security headers, WAF detection, CORS, open redirect, SSL info, cookie flags, rate limit, CSRF)
-  - Ghost Multi‑Tools banner
+  - Sneijderlino methods (robots.txt, sitemap, dir enum, dll)
   - PoC verification 5x
 
 - **4.3 (ADMIN DATABASE EXTRACTOR)** – 2026‑09‑10
   - Deep admin data extraction
   - E‑commerce detection
-  - AI real solutions prompt
+  - AI real solutions
 
 - **4.2 (SENSITIVE HUNTER)** – 2026‑09‑10
   - Domain classification
   - Indonesian sensitive data extraction
-  - ProxyScrape API integration
+  - ProxyScrape API
 
 - **4.1 (OMNI XSS + WP LOG EXPLOIT)** – 2026‑09‑09
   - Dalfox XSS engine
-  - CVE‑2026‑54806 detection & exploitation
-  - Deface full PoC
+  - CVE‑2026‑54806 detection
 
 - **3.5 (ULTRA SAVAGE)** – 2026‑09‑08
   - 1M+ SQLi & XSS payloads
   - AI analysis + PDF
-  - SQL data extraction
 
 - **2.0 (FAST DEMON)** – 2026‑09‑03
   - Speed optimization
