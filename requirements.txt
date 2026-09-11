@@ -1,5 +1,5 @@
 # ============================================================
-# GHOST SCANNER v4.6 – OMNI TOOLS+ X
+# GHOST SCANNER v5.1 [BETA] – OMNI TOOLS X SAVAGE
 # Full Dependencies
 # ============================================================
 
@@ -16,10 +16,10 @@ rich>=13.7.1
 cryptography>=42.0.0
 
 # === PDF Report ===
-fpdf>=1.7.2
+fpdf2>=2.7.0
 
-# === XML Parsing (untuk Nmap output) ===
-# Sudah built-in di Python (xml.etree.ElementTree)
+# === OSINT ===
+user-scanner>=1.0.0
 
 # ============================================================
 # EXTERNAL TOOLS (Install terpisah, bukan via pip)
@@ -42,6 +42,7 @@ fpdf>=1.7.2
 # --- Python Tools (pip install) ---
 #   sqlmap          : pip install sqlmap
 #   arjun           : pip install arjun
+#   user-scanner    : pip install user-scanner
 #
 # --- System Tools (download manual) ---
 #   nmap            : https://nmap.org/download.html
@@ -49,10 +50,11 @@ fpdf>=1.7.2
 #   wireshark/tshark: https://www.wireshark.org/download.html
 #   burpsuite       : https://portswigger.net/burp/communitydownload
 #
+# --- Strix AI (install via curl) ---
+#   curl -sSL https://strix.ai/install | bash
+#   Set env: STRIX_LLM, LLM_API_KEY
+#
 # --- SecretFinder (git clone) ---
 #   git clone https://github.com/m4ll0k/SecretFinder.git ~/SecretFinder
 #
 # ============================================================
-# OPTIONAL
-# ============================================================
-# pyppeteer>=2.0.0    # untuk headless XSS verification (--headless)

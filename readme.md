@@ -1,34 +1,37 @@
 # GHOST SCANNER – OMNI TOOLS X SAVAGE
 
-**All‑in‑One Security Assessment & Penetration Testing Framework**  
-Version 5.0 – OMNI TOOLS X SAVAGE  
-Release Date: 2026‑09‑11  
+**All-in-One Security Assessment & Penetration Testing Framework**  
+Version 5.1 [BETA] – OMNI TOOLS X SAVAGE  
+Release Date: 2026-09-11  
 Developer: GhostTeam
 
 ---
 
 ## OVERVIEW
 
-Ghost Scanner is a modular, high‑performance security assessment framework designed for ethical hacking, vulnerability assessment, and authorized stress testing. It combines internal engines with **19 industry‑standard external tools**, unified scanning, real DDoS/DoS engine, AI‑powered analysis, and comprehensive reporting in JSON, HTML, and PDF.
+Ghost Scanner is a modular, high-performance security assessment framework designed for ethical hacking, vulnerability assessment, and authorized stress testing. It combines internal engines with **19 industry-standard external tools**, **user-scanner OSINT**, **Strix AI autonomous pentesting**, unified scanning, real DDoS/DoS engine, AI-powered analysis, and comprehensive reporting in JSON, HTML, and PDF.
 
 ### Key Capabilities
 
 - **Unified Scan Mode** – one command `--scan` runs SQLi, XSS, WP, Deface, DDoS check, JWT, HTTP Smuggling, GraphQL, OAuth, admin bypass, sensitive data extraction, and more in a single pass
 - **19 External Tools Integration** – Nuclei, Subfinder, httpx, Naabu, Katana, ffuf, sqlmap, Dalfox, Amass, dnsx, gau, waybackurls, Arjun, SecretFinder, Interactsh, Nmap, Metasploit, Wireshark (tshark), BurpSuite
-- **Real DDoS/DoS Engine** – socket‑based HTTP flood, SYN flood, SSL renegotiation, UDP flood with real‑time stats (no simulation)
-- **Advanced Web Vulnerability Scanning** – SQLi (1M+ payloads), XSS (Dalfox context‑aware + 1M payloads), LFI, RFI, Command Injection, SSTI, NoSQL, LDAP, XXE, SSRF, Path Traversal, Deserialization, RCE
+- **🆕 user-scanner OSINT** – otomatis jalan kalau ditemukan email di hasil scan; cek keberadaan email di GitHub, Twitter, Instagram, dll.
+- **🆕 Strix AI Autonomous Pentest** – setelah scan selesai, jalankan Strix AI (headless) untuk validasi & exploit otomatis menggunakan LLM
+- **Real DDoS/DoS Engine** – socket-based HTTP flood, SYN flood, SSL renegotiation, UDP flood with real-time stats (no simulation)
+- **Advanced Web Vulnerability Scanning** – SQLi (1M+ payloads), XSS (Dalfox context-aware + 1M payloads), LFI, RFI, Command Injection, SSTI, NoSQL, LDAP, XXE, SSRF, Path Traversal, Deserialization, RCE
 - **Deface Detection** – advanced pattern matching with 20+ indicators, title extraction, curl command, verified 3x
-- **WordPress Activity Log RCE (CVE‑2026‑54806)** – detection and blind command execution (auto‑skip if not WordPress)
+- **WordPress Activity Log RCE (CVE-2026-54806)** – detection and blind command execution (auto-skip if not WordPress)
 - **Admin Deep Extraction** – login bypass, crawl 22+ admin pages, extract tables, download exports (.sql, .csv, .zip, .json), detect database config leaks
-- **E‑commerce Detection** – identifies domain/hosting/VPS provider, extracts products, prices, buyers, employees
+- **E-commerce Detection** – identifies domain/hosting/VPS provider, extracts products, prices, buyers, employees
 - **Sensitive Data Extraction (Indonesia)** – NIK (with province/kabupaten/kecamatan parsing), NPWP, NIP, bank accounts, bank names, WhatsApp, PIN, KTP links, KK links, Surat Izin links, PDF links, API keys, JWT, cloud keys, source code
 - **Separate PDF per Sensitive Category** – each data type gets its own PDF (NIK, KTP, KK, HP, Email, Bank, Rekening, PIN, API, Source Code, Admin Users/Buyers/Employees/Orders/Products)
-- **AI Analysis (Claude Opus 5 via CodeCraft)** – 8‑section report: executive summary, critical findings, high findings, sensitive data analysis (UU PDP/GDPR), prioritized remediation, 30‑60‑90 day action plan, further testing suggestions, constructive critique, best practices
-- **PoC Verification 3x** – each finding re‑verified 3 times (min. 2/3 match) to eliminate false positives
-- **IP Safety / Anti‑Ban v2** – adaptive delay based on response time, proxy rotation (ProxyScrape API), user‑agent rotation, cloudscraper + fallback, exponential backoff
+- **AI Analysis (Claude Opus 5 via CodeCraft)** – 8-section report: executive summary, critical findings, high findings, sensitive data analysis (UU PDP/GDPR), prioritized remediation, 30-60-90 day action plan, further testing suggestions, constructive critique, best practices
+- **PoC Verification 3x** – each finding re-verified 3 times (min. 2/3 match) to eliminate false positives
+- **IP Safety / Anti-Ban v2** – adaptive delay based on response time, proxy rotation (ProxyScrape API), user-agent rotation, cloudscraper + fallback, exponential backoff
+- **WAF Evasion** – realistic browser fingerprint (headers + UA), deteksi & bypass Akamai, Cloudflare, Sucuri, Imperva
 - **Domain Classification** – Government, Education, Police, Military, Medical, Business, Other
 - **Interactive Menu** – menu lengkap dengan penjelasan tiap mode saat start tanpa argumen
-- **Cross‑Platform** – Windows, Linux (Kali/Ubuntu/Arch/BlackArch), Termux (Android), macOS
+- **Cross-Platform** – Windows, Linux (Kali/Ubuntu/Arch/BlackArch), Termux (Android), macOS
 - **NO WSL REQUIRED** – works natively on Windows
 
 Ghost Scanner is intended for **authorized testing only**.
@@ -71,7 +74,7 @@ cd Ghost-Scanner
 
 ```bash
 pip install -r requirements.txt
-pip install sqlmap arjun
+pip install sqlmap arjun user-scanner
 ```
 
 ### Step 4 – Install Go Tools
@@ -122,7 +125,17 @@ curl https://raw.githubusercontent.com/rapid7/metasploit-omnibus/master/config/t
 # Download dari https://portswigger.net/burp/communitydownload
 ```
 
-### Step 8 – Verify Installation
+### Step 8 – Install Strix AI (Opsional)
+
+```bash
+curl -sSL https://strix.ai/install | bash
+
+# Set environment untuk Strix (LLM)
+export STRIX_LLM="openrouter/z-ai/glm-5.3"
+export LLM_API_KEY="your-api-key"
+```
+
+### Step 9 – Verify Installation
 
 ```bash
 nuclei -version
@@ -131,10 +144,12 @@ httpx -version
 dalfox version
 nmap --version
 sqlmap --version
+user-scanner -h
+strix --help
 python3 ghostscanner.py --help
 ```
 
-### Step 9 – Run Ghost Scanner
+### Step 10 – Run Ghost Scanner
 
 ```bash
 python3 ghostscanner.py -u https://target.com --scan --ai --pdf --tools --force-admin
@@ -162,7 +177,7 @@ cd Ghost-Scanner
 
 ```bash
 pip install --break-system-packages -r requirements.txt
-pip install --break-system-packages sqlmap arjun
+pip install --break-system-packages sqlmap arjun user-scanner
 ```
 
 Atau pakai virtualenv:
@@ -170,7 +185,7 @@ Atau pakai virtualenv:
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
-pip install sqlmap arjun
+pip install sqlmap arjun user-scanner
 ```
 
 ### Step 4 – Install Go Tools
@@ -208,7 +223,15 @@ pip install --break-system-packages -r ~/SecretFinder/requirements.txt
 sudo pacman -S nmap wireshark-qt
 ```
 
-### Step 7 – Run Ghost Scanner
+### Step 7 – Install Strix AI (Opsional)
+
+```bash
+curl -sSL https://strix.ai/install | bash
+export STRIX_LLM="openrouter/z-ai/glm-5.3"
+export LLM_API_KEY="your-api-key"
+```
+
+### Step 8 – Run Ghost Scanner
 
 ```bash
 python3 ghostscanner.py -u https://target.com --scan --ai --pdf --tools --force-admin
@@ -243,7 +266,7 @@ cd Ghost-Scanner
 
 ```bash
 pip install --break-system-packages -r requirements.txt
-pip install --break-system-packages sqlmap arjun
+pip install --break-system-packages sqlmap arjun user-scanner
 ```
 
 ### Step 5 – Install Go Tools
@@ -271,11 +294,16 @@ echo 'export PATH=$PATH:$HOME/go/bin' >> ~/.bashrc
 source ~/.bashrc
 ```
 
-### Step 7 – Install SecretFinder
+### Step 7 – Install SecretFinder & Strix
 
 ```bash
 git clone https://github.com/m4ll0k/SecretFinder.git ~/SecretFinder
 pip install --break-system-packages -r ~/SecretFinder/requirements.txt
+
+# Strix AI (opsional)
+curl -sSL https://strix.ai/install | bash
+export STRIX_LLM="openrouter/z-ai/glm-5.3"
+export LLM_API_KEY="your-api-key"
 ```
 
 ### Step 8 – Run Ghost Scanner
@@ -312,7 +340,7 @@ pip --version
 2. Download **`go1.xx.x.windows-amd64.msi`** (versi terbaru)
 3. **Double-click** file `.msi`
 4. Ikuti wizard: Next → Next → Install (default path: `C:\Program Files\Go`)
-5. **Tutup CMD, buka lagi** (biar PATH kebaca)
+5. **Tutup CMD, buka lagi**
 
 Verifikasi:
 ```cmd
@@ -331,7 +359,6 @@ git --version
 
 ### Step 4 – Clone Repository
 
-Buka **CMD**, jalankan:
 ```cmd
 cd %USERPROFILE%\Downloads
 git clone https://github.com/cozyleon00b-dev/Ghost-Scanner.git
@@ -342,7 +369,7 @@ cd Ghost-Scanner
 
 ```cmd
 pip install -r requirements.txt
-pip install sqlmap arjun
+pip install sqlmap arjun user-scanner
 ```
 
 ### Step 6 – Install Go Tools
@@ -400,16 +427,26 @@ cd %USERPROFILE%
 git clone https://github.com/m4ll0k/SecretFinder.git
 ```
 
-### Step 10 – Verify Installation
+### Step 10 – Install Strix AI (Opsional)
+
+```cmd
+# Install via PowerShell atau WSL (opsional)
+curl -sSL https://strix.ai/install | bash
+
+# Set env
+setx STRIX_LLM "openrouter/z-ai/glm-5.3"
+setx LLM_API_KEY "your-api-key"
+```
+
+### Step 11 – Verify Installation
 
 Buka **CMD baru**:
 ```cmd
 where nuclei && where subfinder && where httpx && where naabu && where katana && where ffuf && where dalfox && where amass && where dnsx && where gau && where waybackurls && where interactsh-client
+user-scanner -h
 ```
 
-Kalau semua muncul path `C:\Users\<user>\go\bin\xxx.exe`, berarti berhasil.
-
-### Step 11 – Run Ghost Scanner
+### Step 12 – Run Ghost Scanner
 
 ```cmd
 cd %USERPROFILE%\Downloads\Ghost-Scanner
@@ -422,7 +459,7 @@ python ghostscanner.py -u https://target.com --scan --ai --pdf --tools --force-a
 
 ## 5. MACOS INSTALLATION
 
-### Step 1 – Install Homebrew (Jika Belum Ada)
+### Step 1 – Install Homebrew
 
 ```bash
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
@@ -445,7 +482,7 @@ cd Ghost-Scanner
 
 ```bash
 pip3 install -r requirements.txt
-pip3 install sqlmap arjun
+pip3 install sqlmap arjun user-scanner
 ```
 
 ### Step 5 – Install Go Tools
@@ -473,11 +510,16 @@ echo 'export PATH=$PATH:$(go env GOPATH)/bin' >> ~/.zshrc
 source ~/.zshrc
 ```
 
-### Step 7 – Install SecretFinder
+### Step 7 – Install SecretFinder & Strix
 
 ```bash
 git clone https://github.com/m4ll0k/SecretFinder.git ~/SecretFinder
 pip3 install -r ~/SecretFinder/requirements.txt
+
+# Strix AI (opsional)
+curl -sSL https://strix.ai/install | bash
+export STRIX_LLM="openrouter/z-ai/glm-5.3"
+export LLM_API_KEY="your-api-key"
 ```
 
 ### Step 8 – Run Ghost Scanner
@@ -490,7 +532,7 @@ python3 ghostscanner.py -u https://target.com --scan --ai --pdf --tools --force-
 
 ## INTERACTIVE MENU
 
-Jalankan Ghost Scanner tanpa argumen untuk membuka **menu interaktif** dengan penjelasan lengkap:
+Jalankan Ghost Scanner tanpa argumen untuk membuka **menu interaktif**:
 
 ```bash
 python ghostscanner.py
@@ -500,10 +542,10 @@ Menu yang muncul:
 
 ```
 [1] SCAN (Unified)
-    Full automated scan dalam satu perintah:
-      SQLi (1M+ payloads), XSS (Dalfox + 1M), LFI/RFI/SSTI/XXE/SSRF,
-      WP Activity Log CVE, Deface, DDoS Check, JWT, HTTP Smuggling,
-      GraphQL, OAuth, Admin bypass, Sensitive data, AI + PDF.
+    Full automated scan: SQLi (1M+ payloads), XSS (Dalfox + 1M),
+    LFI/RFI/SSTI/XXE/SSRF, WP Activity Log CVE, Deface, DDoS Check,
+    JWT, HTTP Smuggling, GraphQL, OAuth, Admin bypass,
+    Sensitive data, user-scanner OSINT, Strix AI, AI + PDF.
 
 [2] TOOLS (External)
     Jalankan 19 external tools (Nuclei, Subfinder, httpx, Naabu, Katana,
@@ -519,13 +561,11 @@ Menu yang muncul:
 [0] EXIT
 ```
 
-Setiap mode akan meminta target URL dan konfigurasi tambahan (AI, PDF, tools, force admin).
-
 ---
 
 ## USAGE EXAMPLES
 
-### Unified Scan (All Features, 19 Tools)
+### Unified Scan (All Features, 19 Tools + OSINT + Strix)
 
 **Linux / Termux / macOS:**
 ```bash
@@ -549,7 +589,7 @@ python3 ghostscanner.py -u https://target.com --quick
 python3 ghostscanner.py -u https://target.com --scan --proxy-list proxies.txt --validate-proxy --ai --pdf
 ```
 
-### Stealth Mode (Slow Delay, No Proxy)
+### Stealth Mode
 
 ```bash
 python3 ghostscanner.py -u https://target.com --scan --no-proxy --delay 2.0
@@ -559,12 +599,6 @@ python3 ghostscanner.py -u https://target.com --scan --no-proxy --delay 2.0
 
 ```bash
 python3 ghostscanner.py -u https://target.com --scan --force-admin --ai --pdf
-```
-
-### Check WP Activity Log CVE Only
-
-```bash
-python3 ghostscanner.py -u https://target.com --wp-check
 ```
 
 ### Real DDoS Attack (HTTP Flood)
@@ -579,23 +613,59 @@ python3 ghostscanner.py -u https://your-server.com --dos --threads 500 --duratio
 python3 ghostscanner.py -u https://your-server.com --ddos --threads 300 --duration 30
 ```
 
-### SYN Flood
+### SYN Flood / SSL Reneg / UDP Flood
 
 ```bash
 python3 ghostscanner.py -u https://your-server.com --syn --threads 200 --duration 20
-```
-
-### SSL Renegotiation
-
-```bash
 python3 ghostscanner.py -u https://your-server.com --ssl-reneg --threads 150 --duration 30
-```
-
-### UDP Flood
-
-```bash
 python3 ghostscanner.py -u https://your-server.com --udp --threads 100 --duration 30
 ```
+
+---
+
+## 🆕 INTEGRASI v5.1
+
+### user-scanner OSINT
+
+Jika saat scan ditemukan **email**, Ghost Scanner otomatis menjalankan:
+
+```bash
+user-scanner -e <email> --only-found -v
+```
+
+untuk cek keberadaan email di GitHub, Twitter, Instagram, dan platform lain.
+
+**Install:**
+```bash
+pip install user-scanner
+```
+
+**Repo:** https://github.com/kaifcodec/user-scanner
+
+### Strix AI Autonomous Pentest
+
+Setelah semua scan selesai, Ghost Scanner menjalankan Strix AI (headless):
+
+```bash
+strix --target <URL> -n
+```
+
+untuk validasi & eksploitasi otomatis menggunakan LLM.
+
+**Install:**
+```bash
+curl -sSL https://strix.ai/install | bash
+```
+
+**Set env (wajib):**
+```bash
+export STRIX_LLM="openrouter/z-ai/glm-5.3"
+export LLM_API_KEY="your-api-key"
+```
+
+**Repo:** https://github.com/usestrix/strix
+
+**Catatan:** Strix memerlukan Docker berjalan. Jika tidak memenuhi, otomatis di-skip.
 
 ---
 
@@ -603,7 +673,7 @@ python3 ghostscanner.py -u https://your-server.com --udp --threads 100 --duratio
 
 | # | Tool | Function |
 |---|------|----------|
-| 1 | Nuclei | Template‑based vulnerability scanning |
+| 1 | Nuclei | Template-based vulnerability scanning |
 | 2 | Subfinder | Passive subdomain enumeration |
 | 3 | httpx | Live host probing |
 | 4 | Naabu | Fast port scanning |
@@ -611,13 +681,13 @@ python3 ghostscanner.py -u https://your-server.com --udp --threads 100 --duratio
 | 6 | ffuf | Web fuzzing |
 | 7 | sqlmap | Automated SQL injection |
 | 8 | Dalfox | XSS scanning |
-| 9 | Amass | Attack‑surface mapping |
+| 9 | Amass | Attack-surface mapping |
 | 10 | dnsx | DNS resolution & probing |
 | 11 | gau | Historical URL fetcher |
 | 12 | waybackurls | Wayback Machine URLs |
 | 13 | Arjun | Hidden HTTP parameter discovery |
 | 14 | SecretFinder | API key detection in JS |
-| 15 | Interactsh | Out‑of‑band interaction |
+| 15 | Interactsh | Out-of-band interaction |
 | 16 | Nmap | Port scan + service detection |
 | 17 | Metasploit | Exploit module suggestions |
 | 18 | Wireshark (tshark) | Packet capture & verification |
@@ -641,7 +711,7 @@ go install github.com/tomnomnom/waybackurls@latest
 go install -v github.com/projectdiscovery/interactsh/cmd/interactsh-client@latest
 ```
 
-**Windows CMD:** (sama, tapi jalankan satu per satu)
+**Windows CMD:** (sama, jalankan satu per satu)
 
 ---
 
@@ -722,6 +792,9 @@ sensitive_data/
 | `go: command not found` | Restart terminal, atau tambah Go ke PATH |
 | `nuclei: command not found` | Linux/Termux: `export PATH=$PATH:$(go env GOPATH)/bin` / Windows: tambah `%GOPATH%\bin` ke PATH |
 | `pip: command not found` | Pakai `python -m pip install ...` |
+| `user-scanner: command not found` | `pip install user-scanner` |
+| `strix: command not found` | `curl -sSL https://strix.ai/install \| bash` |
+| Strix skip otomatis | Set `STRIX_LLM` dan `LLM_API_KEY`, jalankan Docker |
 | Proxy validation fails | Coba tanpa `--validate-proxy` |
 | Scan terlalu lambat | Gunakan `--quick` |
 | AI timeout | Otomatis retry 3x dengan timeout 180s |
@@ -730,7 +803,7 @@ sensitive_data/
 | `externally-managed-environment` error | Tambah `--break-system-packages` atau pakai venv |
 | Windows: `python3` not found | Gunakan `python` |
 | Windows: Device Guard blokir tool | Unblock file atau install WSL |
-| Windows: `UnicodeDecodeError` | Sudah di‑fix di v4.6+ (`errors='ignore'`) |
+| Windows: `UnicodeDecodeError` | Sudah di-fix di v4.6+ (`errors='ignore'`) |
 | `The system cannot find the path specified` | Pakai tanda kutip: `cd "C:\path\to\folder"` |
 
 ### Performance Tips
@@ -750,86 +823,95 @@ Ghost Scanner dirancang untuk **ethical security research, penetration testing, 
 - Anda harus memiliki **izin eksplisit** untuk menguji sistem yang bukan milik Anda
 - Penggunaan tanpa izin adalah **ilegal** dan dapat mengakibatkan hukuman pidana berat
 - **DDoS/DoS** ke server orang lain adalah **tindak pidana**. Gunakan **hanya pada server milik Anda sendiri**
-- Author (**ARGA NOT DEV**) **tidak bertanggung jawab** atas penyalahgunaan, kerusakan, atau konsekuensi hukum
+- Author (**GhostTeam**) **tidak bertanggung jawab** atas penyalahgunaan, kerusakan, atau konsekuensi hukum
 - Dengan menggunakan tool ini, Anda menerima tanggung jawab penuh atas tindakan Anda
 
 ---
 
 ## VERSION HISTORY
 
-- **5.0 (OMNI TOOLS X SAVAGE)** – 2026‑09‑11
-  - Unified scan mode (`--scan` gas semua sekaligus)
-  - Real DDoS/DoS engine (socket‑based, real‑time stats)
-  - Interactive menu dengan penjelasan lengkap
-  - Rebranding skull banner (ARGA NOT DEV)
-  - Fix interactive prompt (loop kalau kosong)
+- **5.1 [BETA]** – 2026-09-11
+  - 🆕 Integrasi **user-scanner** (OSINT email/username)
+  - 🆕 Integrasi **Strix AI** (autonomous pentest headless)
+  - 🆕 Skull banner full
+  - Improved WAF evasion (Akamai, Cloudflare, Sucuri, Imperva)
+  - Realistic browser fingerprint (headers + UA rotation)
+  - Fix interactive prompt loop
   - No error, no bug
 
-- **4.7 (OMNI TOOLS+ X FINAL)** – 2026‑09‑11
+- **5.0 (OMNI TOOLS X SAVAGE)** – 2026-09-11
+  - Unified scan mode (`--scan` gas semua sekaligus)
+  - Real DDoS/DoS engine (socket-based, real-time stats)
+  - Interactive menu dengan penjelasan lengkap
+  - Rebranding skull banner (ARGA NOT DEV)
+
+- **4.7 (OMNI TOOLS+ X FINAL)** – 2026-09-11
   - DDoS vulnerability check
   - Advanced deface detection
   - JWT attack, HTTP smuggling, Subdomain takeover
   - GraphQL introspection, OAuth bypass
 
-- **4.6 (OMNI TOOLS+ X)** – 2026‑09‑11
+- **4.6 (OMNI TOOLS+ X)** – 2026-09-11
   - 4 new tools: Nmap, Metasploit, Wireshark, BurpSuite
   - Fix UnicodeDecodeError
-  - Anti‑ban double‑layer delay
+  - Anti-ban double-layer delay
   - PoC verification 3x
 
-- **4.5 (OMNI TOOLS+)** – 2026‑09‑10
+- **4.5 (OMNI TOOLS+)** – 2026-09-10
   - 15 external tools integration
   - Separate PDF per sensitive data category
   - PIN extraction, KK links
-  - Auto‑skip WP check
+  - Auto-skip WP check
 
-- **4.4 (GHOST MULTI‑TOOLS+)** – 2026‑09‑10
+- **4.4 (GHOST MULTI-TOOLS+)** – 2026-09-10
   - Sneijderlino methods (robots.txt, sitemap, dir enum, dll)
   - PoC verification 5x
 
-- **4.3 (ADMIN DATABASE EXTRACTOR)** – 2026‑09‑10
+- **4.3 (ADMIN DATABASE EXTRACTOR)** – 2026-09-10
   - Deep admin data extraction
-  - E‑commerce detection
+  - E-commerce detection
   - AI real solutions
 
-- **4.2 (SENSITIVE HUNTER)** – 2026‑09‑10
+- **4.2 (SENSITIVE HUNTER)** – 2026-09-10
   - Domain classification
   - Indonesian sensitive data extraction
   - ProxyScrape API
 
-- **4.1 (OMNI XSS + WP LOG EXPLOIT)** – 2026‑09‑09
+- **4.1 (OMNI XSS + WP LOG EXPLOIT)** – 2026-09-09
   - Dalfox XSS engine
-  - CVE‑2026‑54806 detection
+  - CVE-2026-54806 detection
 
-- **3.5 (ULTRA SAVAGE)** – 2026‑09‑08
+- **3.5 (ULTRA SAVAGE)** – 2026-09-08
   - 1M+ SQLi & XSS payloads
   - AI analysis + PDF
 
-- **2.0 (FAST DEMON)** – 2026‑09‑03
+- **2.0 (FAST DEMON)** – 2026-09-03
   - Speed optimization
   - Custom help menu
   - Proxy validation
 
-- **1.0 (DEMON)** – 2026‑08‑31
+- **1.0 (DEMON)** – 2026-08-31
   - Initial release
 
 ---
 
 ## CONTACT
 
-Maintained by **ARGA NOT DEV**  
+Maintained by **GhostTeam**  
 GitHub: [https://github.com/cozyleon00b-dev](https://github.com/cozyleon00b-dev)
 
 ---
 
 ## ACKNOWLEDGEMENTS
 
-Special thanks to open‑source community dan project berikut:
+Special thanks to open-source community dan project berikut:
 
 - ProjectDiscovery (Nuclei, Subfinder, httpx, Naabu, Katana, dnsx, Interactsh)
 - OWASP Amass
 - ffuf, sqlmap, Dalfox, gau, waybackurls, Arjun, SecretFinder
 - Nmap, Metasploit, Wireshark, BurpSuite
+- [kaifcodec/user-scanner](https://github.com/kaifcodec/user-scanner)
+- [usestrix/strix](https://github.com/usestrix/strix)
 - Cloudscraper, Rich, fpdf2
 
 **THANKS TO**
