@@ -1,13 +1,15 @@
 # ============================================================
-# GHOST SCANNER v5.1 [BETA] – OMNI TOOLS X SAVAGE
+# GHOST SCANNER v5.1 [BETA] - OMNI TOOLS X SAVAGE
 # Full Dependencies
 # ============================================================
 
 # === HTTP & Bypass ===
 cloudscraper>=1.2.71
-fake-useragent>=1.5.1
 requests>=2.31.0
 urllib3>=2.0.0
+
+# === TLS Fingerprint (Akamai/Akamai Bot Manager bypass) ===
+curl-cffi>=0.16.0
 
 # === CLI & UI ===
 rich>=13.7.1
@@ -49,10 +51,6 @@ user-scanner>=1.0.0
 #   metasploit      : https://www.metasploit.com/download
 #   wireshark/tshark: https://www.wireshark.org/download.html
 #   burpsuite       : https://portswigger.net/burp/communitydownload
-#
-# --- Strix AI (install via curl) ---
-#   curl -sSL https://strix.ai/install | bash
-#   Set env: STRIX_LLM, LLM_API_KEY
 #
 # --- SecretFinder (git clone) ---
 #   git clone https://github.com/m4ll0k/SecretFinder.git ~/SecretFinder
