@@ -1,10 +1,35 @@
+# Python
 __pycache__/
-*.pyc
-*.log
-*.json
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Results (jangan push hasil scan)
 results/
 sensitive_data/
-proxies.txt
-secret.key
-master.key
+downloads/
+
+# Data
+*.db
+data.json
+ghostbot.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
 .DS_Store
+Thumbs.db
+
+# Proxy lists
+proxies.txt
+
+# Logs
+*.log
+
+# Node
+node_modules/
